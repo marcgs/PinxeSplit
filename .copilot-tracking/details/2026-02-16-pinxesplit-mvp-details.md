@@ -118,7 +118,7 @@ Files:
 * `apps/api/src/config/env.ts` — Environment variable parsing with Zod
 * `apps/api/src/middleware/errorHandler.ts` — Global error handling middleware
 * `apps/api/src/middleware/validate.ts` — Zod schema validation middleware for request body/params/query
-* `apps/api/prisma/schema.prisma` — Placeholder schema (full schema in Phase 2)
+* `apps/api/prisma/schema.prisma` — Placeholder schema (full schema in Phase 2A)
 * `apps/api/tsconfig.json` — Extends `tsconfig.base.json`, NodeNext module resolution
 * `apps/api/.env.example` — Backend-specific env vars template
 
@@ -194,11 +194,12 @@ Validation commands:
 * `npm run lint` — ESLint across all workspaces
 * `npm run typecheck` — TypeScript strict across all workspaces
 
-## Implementation Phase 2: Authentication and User Management
+## Implementation Phase 2A: Auth Infrastructure and Mock Auth
 
 <!-- parallelizable: false -->
+<!-- note: Phase 2A provides a working auth layer via mock login, unblocking Phases 3-7 without waiting for OAuth provider credentials. -->
 
-### Step 2.1: Create Prisma schema with all models
+### Step 2A.1: Create Prisma schema with all models
 
 Define the complete database schema in Prisma with all seven models plus RefreshToken.
 
@@ -218,7 +219,61 @@ Context references:
 Dependencies:
 * Step 1.5 completion (Prisma configured)
 
-### Step 2.2: Implement Google OAuth 2.0 PKCE flow
+### Step 2A.2: Implement JWT access/refresh token issuance and authGuard middleware
+
+Create stateless JWT authentication with short-lived access tokens and long-lived refresh tokens.
+
+Files:
+* `apps/api/src/services/token.service.ts` — `generateAccessToken()` (15 min), `generateRefreshToken()` (7 days), `verifyAccessToken()`, `revokeRefreshToken()`
+* `apps/api/src/middleware/authGuard.ts` — Extract Bearer token, verify JWT, attach `req.user`
+* `apps/api/src/routes/auth.routes.ts` — `POST /api/v1/auth/refresh` (exchange refresh token for new access token)
+
+Success criteria:
+* Access token expires after 15 minutes; refresh token after 7 days
+* `authGuard` rejects requests without valid Bearer token (401)
+* `authGuard` attaches decoded user payload to `req.user`
+* Refresh endpoint issues new access token without re-authentication
+* Refresh tokens are stored in DB and revocable
+
+Context references:
+* `.copilot-tracking/subagent/2026-02-16/tech-stack-architecture-research.md` (Section 3.3) — JWT middleware example
+
+Dependencies:
+* Step 2A.1 completion (RefreshToken model)
+
+### Step 2A.3: Implement mock auth endpoint and dev seed users
+
+Create a mock authentication endpoint gated behind `ENABLE_MOCK_AUTH=true` environment variable. The endpoint find-or-creates a seeded dev user and issues real JWTs through the same `token.service` code path as production OAuth, ensuring `authGuard` and refresh flows are exercised identically.
+
+Files:
+* `apps/api/src/routes/auth.routes.ts` — Conditionally register `POST /api/v1/auth/mock` when `ENABLE_MOCK_AUTH=true`
+* `apps/api/src/controllers/auth.controller.ts` — `mockLogin()`: accept `{ email }` body, find-or-create user, issue JWT via `token.service`
+* `apps/api/src/config/env.ts` — Add `ENABLE_MOCK_AUTH` boolean (default: `false`)
+* `apps/api/prisma/seed.ts` — Seed 3 dev users: Alice (`alice@dev.local`), Bob (`bob@dev.local`), Charlie (`charlie@dev.local`) with `auth_provider: "mock"`
+* `apps/api/.env.example` — Add `ENABLE_MOCK_AUTH=true` with comment: "# Only for local development. Never set in production."
+
+Endpoint details:
+
+* `POST /api/v1/auth/mock` — Body: `{ "email": "alice@dev.local" }`. Returns `{ accessToken, refreshToken, user }` using the same response shape as real OAuth endpoints. Route is only registered when `ENABLE_MOCK_AUTH === true`.
+
+Security guardrails:
+* Route registration is conditional: the `POST /api/v1/auth/mock` handler is never imported or mounted unless `ENABLE_MOCK_AUTH=true`
+* Server logs a `[SECURITY WARNING] Mock auth is enabled — do NOT use in production` message at startup when active
+* `ENABLE_MOCK_AUTH` is absent from all deployment configs, Bicep templates, and CI environment variables
+* The mock endpoint still issues real JWTs through `token.service`, so `authGuard` middleware runs the same code path as production
+
+Success criteria:
+* `POST /api/v1/auth/mock` returns valid JWT tokens for seeded dev users
+* Tokens issued by mock auth work with all `authGuard`-protected endpoints
+* Refresh flow works identically to production (same `token.service` code path)
+* Endpoint returns 404 when `ENABLE_MOCK_AUTH` is not `true`
+* Startup log emits security warning when mock auth is enabled
+* `npx prisma db seed` creates 3 dev users without errors
+
+Dependencies:
+* Step 2A.2 completion (JWT token service and authGuard)
+
+### Step 2A.4: Implement user profile endpoints
 
 Implement Google social login using Passport.js with the Authorization Code + PKCE flow.
 
@@ -239,9 +294,9 @@ Context references:
 * `.copilot-tracking/subagent/2026-02-16/splitwise-features-research.md` (Section 3.1) — US-AUTH-01
 
 Dependencies:
-* Step 2.1 completion (User model exists)
+* Phase 2A completion (User model, token service, authGuard)
 
-### Step 2.3: Implement Apple Sign-In flow
+### Step 2B.2: Implement Apple Sign-In flow
 
 Add Apple Sign-In as the second OAuth provider using Passport.js.
 
@@ -259,31 +314,33 @@ Context references:
 * `.copilot-tracking/subagent/2026-02-16/splitwise-features-research.md` (Section 3.1) — US-AUTH-01
 
 Dependencies:
-* Step 2.2 completion (auth infrastructure in place)
+* Step 2B.1 completion (auth infrastructure in place)
 
-### Step 2.4: Implement JWT access/refresh token issuance and authGuard middleware
+### Step 2B.3: Update login page UI with Google and Apple sign-in buttons
 
-Create stateless JWT authentication with short-lived access tokens and long-lived refresh tokens.
+Add real OAuth sign-in buttons alongside the existing dev login.
 
 Files:
-* `apps/api/src/services/token.service.ts` — `generateAccessToken()` (15 min), `generateRefreshToken()` (7 days), `verifyAccessToken()`, `revokeRefreshToken()`
-* `apps/api/src/middleware/authGuard.ts` — Extract Bearer token, verify JWT, attach `req.user`
-* `apps/api/src/routes/auth.routes.ts` — `POST /api/v1/auth/refresh` (exchange refresh token for new access token)
+* `apps/web/src/features/auth/LoginPage.tsx` — Add Google and Apple sign-in buttons (dev login remains visible only when API reports mock auth available)
+* `apps/web/src/features/auth/useAuth.ts` — Add `loginWithGoogle()` and `loginWithApple()` methods alongside existing `mockLogin()`
 
 Success criteria:
-* Access token expires after 15 minutes; refresh token after 7 days
-* `authGuard` rejects requests without valid Bearer token (401)
-* `authGuard` attaches decoded user payload to `req.user`
-* Refresh endpoint issues new access token without re-authentication
-* Refresh tokens are stored in DB and revocable
-
-Context references:
-* `.copilot-tracking/subagent/2026-02-16/tech-stack-architecture-research.md` (Section 3.3) — JWT middleware example
+* Google and Apple sign-in buttons render on login page
+* OAuth redirect flow works end-to-end for both providers
+* Dev login section only appears when mock auth is available
+* Both OAuth and mock login paths use the same token storage and refresh logic
 
 Dependencies:
-* Step 2.1 completion (RefreshToken model)
+* Steps 2B.1, 2B.2 completion (OAuth endpoints)
+* Step 2A.5 completion (login page with dev login already exists)
 
-### Step 2.5: Implement user profile endpoints
+### Step 2B.4: Validate Phase 2B
+
+Validation commands:
+* Run API integration tests for `POST /api/v1/auth/google`, `POST /api/v1/auth/apple`
+* Verify full OAuth flow in browser: click Google → callback → dashboard
+* Verify email-based deduplication: same email via Google and Apple resolves to same user
+* Verify dev login still works alongside OAuth buttons
 
 Build endpoints for reading and updating the authenticated user's profile.
 
@@ -302,23 +359,23 @@ Context references:
 * `.copilot-tracking/subagent/2026-02-16/splitwise-features-research.md` (Section 3.1) — US-AUTH-02
 
 Dependencies:
-* Step 2.4 completion (authGuard middleware)
+* Step 2A.2 completion (authGuard middleware)
 
-### Step 2.6: Build login page UI and user profile settings page
+### Step 2A.5: Build login page UI (with dev login) and user profile settings page
 
-Build the frontend authentication flow and profile management pages.
+Build the frontend authentication flow with mock/dev login and profile management pages.
 
 Files:
-* `apps/web/src/features/auth/LoginPage.tsx` — Social login buttons, OAuth redirect handling
-* `apps/web/src/features/auth/useAuth.ts` — Auth hook: login, logout, token management, refresh
+* `apps/web/src/features/auth/LoginPage.tsx` — Dev login selector (dropdown of seeded users), conditionally shown when API reports mock auth available
+* `apps/web/src/features/auth/useAuth.ts` — Auth hook: `mockLogin()`, logout, token management, refresh
 * `apps/web/src/features/settings/SettingsPage.tsx` — Profile form: name, avatar, default currency
 * `apps/web/src/lib/api-client.ts` — Fetch wrapper with base URL, auth header injection, token refresh interceptor
 * `apps/web/src/stores/auth.store.ts` — Zustand store: access token, user profile, isAuthenticated
 * `apps/web/src/components/auth/ProtectedRoute.tsx` — Route guard redirecting unauthenticated users to login
 
 Success criteria:
-* Login page renders Google and Apple sign-in buttons
-* Successful OAuth redirects to dashboard with valid session
+* Login page renders dev login selector when mock auth is available
+* Selecting a dev user calls `POST /api/v1/auth/mock` and redirects to dashboard
 * Profile settings page loads current values and saves changes
 * Unauthenticated navigation redirects to login page
 * Token auto-refresh happens transparently before expiry
@@ -327,14 +384,22 @@ Context references:
 * `.copilot-tracking/subagent/2026-02-16/tech-stack-architecture-research.md` (Section 2.6) — API client example
 
 Dependencies:
-* Steps 2.2–2.5 completion (backend auth working)
+* Steps 2A.2–2A.4 completion (backend auth working)
 
-### Step 2.7: Validate Phase 2
+### Step 2A.6: Validate Phase 2A
 
 Validation commands:
-* Run API integration tests for `POST /api/v1/auth/google`, `POST /api/v1/auth/refresh`, `GET /api/v1/users/me`, `PATCH /api/v1/users/me`
-* Verify full OAuth flow in browser: click Google → callback → dashboard
+* Run API integration tests for `POST /api/v1/auth/mock`, `POST /api/v1/auth/refresh`, `GET /api/v1/users/me`, `PATCH /api/v1/users/me`
+* Verify mock login → dashboard → protected routes flow in browser
 * Verify `authGuard` rejects expired/missing tokens
+* Verify mock auth endpoint returns 404 when `ENABLE_MOCK_AUTH` is not set
+
+## Implementation Phase 2B: OAuth Providers (Google and Apple)
+
+<!-- parallelizable: true -->
+<!-- note: Phase 2B can run in parallel with Phases 3-7 since mock auth already provides a working auth layer. -->
+
+### Step 2B.1: Implement Google OAuth 2.0 PKCE flow
 
 ## Implementation Phase 3: Currency and Reference Data
 
@@ -358,7 +423,7 @@ Context references:
 * `.copilot-tracking/subagent/2026-02-16/debt-simplification-research.md` (Rounding section) — minor unit scale note
 
 Dependencies:
-* Step 2.1 completion (Currency model in schema)
+* Step 2A.1 completion (Currency model in schema)
 
 ### Step 3.2: Seed categories table
 
@@ -376,7 +441,7 @@ Context references:
 * `.copilot-tracking/subagent/2026-02-16/splitwise-features-research.md` (Section 1.2) — hierarchical categories
 
 Dependencies:
-* Step 2.1 completion (Category model in schema)
+* Step 2A.1 completion (Category model in schema)
 
 ### Step 3.3: Build currency picker dropdown component
 
@@ -477,7 +542,7 @@ Context references:
 * `.copilot-tracking/subagent/2026-02-16/splitwise-features-research.md` (Section 3.2) — US-GRP-01 through US-GRP-04
 
 Dependencies:
-* Phase 2 completion (auth, User model)
+* Phase 2A completion (auth, User model)
 
 ### Step 4.2: Build group UI pages
 
@@ -1077,6 +1142,7 @@ When validation failures require changes beyond minor fixes:
 * All unit and integration tests pass
 * E2E critical flow tests pass
 * Lighthouse PWA score ≥90
+* Mock auth login flow works locally for development and testing
 * OAuth login works end-to-end for both Google and Apple
 * All four split types produce correct shares
 * Debt simplification reduces transaction count

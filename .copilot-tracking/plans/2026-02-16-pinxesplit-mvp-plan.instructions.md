@@ -68,29 +68,46 @@ Build a Splitwise clone as a Progressive Web App with React, Node.js/Express, Po
   * Run `npm run lint` and `npm run typecheck`
   * Verify PWA manifest loads in browser dev tools
 
-### [ ] Implementation Phase 2: Authentication and User Management
+### [ ] Implementation Phase 2A: Auth Infrastructure and Mock Auth
 
 <!-- parallelizable: false -->
+<!-- note: Phase 2A provides a working auth layer via mock login, unblocking Phases 3-7 without waiting for OAuth provider credentials. -->
 
-* [ ] Step 2.1: Create Prisma schema with all models (User, Group, GroupMember, Expense, ExpenseSplit, Currency, Category, RefreshToken)
-  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Lines 201-219)
-* [ ] Step 2.2: Implement Google OAuth 2.0 PKCE flow with Passport.js
-  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Lines 221-242)
-* [ ] Step 2.3: Implement Apple Sign-In flow with Passport.js
-  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Lines 244-262)
-* [ ] Step 2.4: Implement JWT access/refresh token issuance and `authGuard` middleware
-  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Lines 264-284)
-* [ ] Step 2.5: Implement user profile endpoints (`GET /api/v1/users/me`, `PATCH /api/v1/users/me`)
-  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Lines 286-305)
-* [ ] Step 2.6: Build login page UI and user profile settings page
-  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Lines 307-330)
-* [ ] Step 2.7: Validate Phase 2 — OAuth login flow works end-to-end, JWT refresh works, protected routes reject unauthenticated requests
-  * Run API integration tests for auth endpoints
-  * Verify token refresh lifecycle
+* [ ] Step 2A.1: Create Prisma schema with all models (User, Group, GroupMember, Expense, ExpenseSplit, Currency, Category, RefreshToken)
+  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Step 2A.1)
+* [ ] Step 2A.2: Implement JWT access/refresh token issuance and `authGuard` middleware
+  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Step 2A.2)
+* [ ] Step 2A.3: Implement mock auth endpoint and dev seed users
+  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Step 2A.3)
+* [ ] Step 2A.4: Implement user profile endpoints (`GET /api/v1/users/me`, `PATCH /api/v1/users/me`)
+  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Step 2A.4)
+* [ ] Step 2A.5: Build login page UI (with dev login) and user profile settings page
+  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Step 2A.5)
+* [ ] Step 2A.6: Validate Phase 2A — mock login works end-to-end, JWT refresh works, protected routes reject unauthenticated requests
+  * Run API integration tests for mock auth, refresh, and user profile endpoints
+  * Verify mock login → dashboard → protected routes flow in browser
+  * Verify `authGuard` rejects expired/missing tokens
+
+### [ ] Implementation Phase 2B: OAuth Providers (Google and Apple)
+
+<!-- parallelizable: true -->
+<!-- note: Phase 2B can run in parallel with Phases 3-7 since mock auth already provides a working auth layer. -->
+
+* [ ] Step 2B.1: Implement Google OAuth 2.0 PKCE flow with Passport.js
+  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Step 2B.1)
+* [ ] Step 2B.2: Implement Apple Sign-In flow with Passport.js
+  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Step 2B.2)
+* [ ] Step 2B.3: Update login page UI with Google and Apple sign-in buttons
+  * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Step 2B.3)
+* [ ] Step 2B.4: Validate Phase 2B — OAuth login flows work end-to-end for both providers
+  * Run API integration tests for `POST /api/v1/auth/google` and `POST /api/v1/auth/apple`
+  * Verify full OAuth flow in browser: click Google → callback → dashboard
+  * Verify email-based deduplication across providers
 
 ### [ ] Implementation Phase 3: Currency and Reference Data
 
 <!-- parallelizable: true -->
+<!-- depends: Phase 2A (mock auth provides working authGuard and seeded users) -->
 
 * [ ] Step 3.1: Create and seed `currencies` table (~150 ISO 4217 codes with symbol and minor unit scale)
   * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Lines 343-361)
@@ -107,6 +124,7 @@ Build a Splitwise clone as a Progressive Web App with React, Node.js/Express, Po
 ### [ ] Implementation Phase 4: Group Management
 
 <!-- parallelizable: true -->
+<!-- depends: Phase 2A (mock auth provides working authGuard and seeded users) -->
 
 * [ ] Step 4.1: Implement group API endpoints (CRUD + member management)
   * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Lines 443-480)
@@ -119,6 +137,7 @@ Build a Splitwise clone as a Progressive Web App with React, Node.js/Express, Po
 ### [ ] Implementation Phase 5: Expense CRUD and Split Engine
 
 <!-- parallelizable: false -->
+<!-- depends: Phase 2A + Phase 4 -->
 
 * [ ] Step 5.1: Implement expense API endpoints (CRUD with split validation)
   * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Lines 521-579)
@@ -134,6 +153,7 @@ Build a Splitwise clone as a Progressive Web App with React, Node.js/Express, Po
 ### [ ] Implementation Phase 6: Balances, Settle Up, and Debt Simplification
 
 <!-- parallelizable: false -->
+<!-- depends: Phase 2A + Phase 5 -->
 
 * [ ] Step 6.1: Implement balance aggregation service and API endpoints
   * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Lines 672-719)
@@ -151,6 +171,7 @@ Build a Splitwise clone as a Progressive Web App with React, Node.js/Express, Po
 ### [ ] Implementation Phase 7: Activity Feed
 
 <!-- parallelizable: true -->
+<!-- depends: Phase 2A + Phase 5 -->
 
 * [ ] Step 7.1: Implement activity feed API endpoint
   * Details: .copilot-tracking/details/2026-02-16-pinxesplit-mvp-details.md (Lines 867-906)
@@ -211,6 +232,7 @@ Build a Splitwise clone as a Progressive Web App with React, Node.js/Express, Po
 
 * Monorepo builds without errors from root via `npm run build`
 * All lint and type-check commands pass
+* Mock auth login flow works locally for development and testing
 * OAuth login flows complete end-to-end (Google and Apple)
 * Groups, expenses, and splits can be created, edited, and deleted via the UI
 * All four split types produce correct per-user shares (verified by unit tests)
