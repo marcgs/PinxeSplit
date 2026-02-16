@@ -18,10 +18,16 @@ export default [
         },
       },
       globals: {
+        // Browser globals
         document: 'readonly',
         window: 'readonly',
         navigator: 'readonly',
         console: 'readonly',
+        localStorage: 'readonly',
+        fetch: 'readonly',
+        setTimeout: 'readonly',
+        RequestInit: 'readonly',
+        // React
         React: 'readonly',
       },
     },
@@ -37,6 +43,7 @@ export default [
       'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'no-unused-vars': 'off',
+      'no-undef': 'off', // TypeScript handles this
     },
   },
   {

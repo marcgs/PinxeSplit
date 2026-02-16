@@ -19,22 +19,22 @@ export function useAuth() {
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
     
+    async function loadUser() {
+      try {
+        const userData = await apiClient<User>('/api/v1/users/me');
+        setUser(userData);
+      } catch (error) {
+        console.error('Error loading user:', error);
+        logout();
+      }
+    }
+    
     if (accessToken && !user) {
       loadUser();
     } else if (!accessToken) {
       setLoading(false);
     }
-  }, [user, setLoading]);
-  
-  async function loadUser() {
-    try {
-      const userData = await apiClient<User>('/api/v1/users/me');
-      setUser(userData);
-    } catch (error) {
-      console.error('Error loading user:', error);
-      logout();
-    }
-  }
+  }, [user, setLoading, setUser, logout]);
   
   async function mockLogin(email: string) {
     try {
