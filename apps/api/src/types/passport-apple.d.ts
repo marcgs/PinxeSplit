@@ -20,17 +20,20 @@ declare module 'passport-apple' {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   type AppleVerifyFunction = (
     accessToken: string,
     refreshToken: string,
     idToken: string,
     profile: AppleProfile,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     done: (error: any, user?: any) => void
   ) => void;
 
   class AppleStrategy extends Strategy {
     constructor(options: AppleStrategyOptions, verify: AppleVerifyFunction);
     name: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     authenticate(req: any, options?: any): void;
   }
 

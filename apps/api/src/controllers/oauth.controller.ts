@@ -11,7 +11,7 @@ import { prisma } from '../config/prisma.js';
  * This endpoint handles the server-side token exchange.
  */
 export function googleAuth(req: Request, res: Response, next: NextFunction): void {
-  passport.authenticate('google', { session: false }, async (err: Error | null, expressUser: Express.User) => {
+  passport.authenticate('google', { session: false }, async (err: Error | null, expressUser: { userId: string; email: string }) => {
     try {
       if (err) {
         res.status(401).json({ error: err.message || 'Authentication failed' });
@@ -64,7 +64,7 @@ export function googleAuth(req: Request, res: Response, next: NextFunction): voi
  * Expects identity token from client-side Apple Sign-In flow.
  */
 export function appleAuth(req: Request, res: Response, next: NextFunction): void {
-  passport.authenticate('apple', { session: false }, async (err: Error | null, expressUser: Express.User) => {
+  passport.authenticate('apple', { session: false }, async (err: Error | null, expressUser: { userId: string; email: string }) => {
     try {
       if (err) {
         res.status(401).json({ error: err.message || 'Authentication failed' });
@@ -115,7 +115,7 @@ export function appleAuth(req: Request, res: Response, next: NextFunction): void
  * GET /api/v1/auth/google/callback
  */
 export function googleCallback(req: Request, res: Response, next: NextFunction): void {
-  passport.authenticate('google', { session: false }, async (err: Error | null, expressUser: Express.User) => {
+  passport.authenticate('google', { session: false }, async (err: Error | null, expressUser: { userId: string; email: string }) => {
     try {
       if (err || !expressUser) {
         // Redirect to frontend with error
@@ -156,7 +156,7 @@ export function googleCallback(req: Request, res: Response, next: NextFunction):
  * POST /api/v1/auth/apple/callback
  */
 export function appleCallback(req: Request, res: Response, next: NextFunction): void {
-  passport.authenticate('apple', { session: false }, async (err: Error | null, expressUser: Express.User) => {
+  passport.authenticate('apple', { session: false }, async (err: Error | null, expressUser: { userId: string; email: string }) => {
     try {
       if (err || !expressUser) {
         // Redirect to frontend with error

@@ -64,6 +64,45 @@ export function useAuth() {
     }
   }
   
+  /**
+   * Initiate Google OAuth flow
+   * Opens Google sign-in in a popup or redirects to Google OAuth
+   */
+  async function loginWithGoogle(): Promise<void> {
+    // Redirect to Google OAuth endpoint
+    const googleAuthUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/v1/auth/google`;
+    window.location.href = googleAuthUrl;
+  }
+  
+  /**
+   * Initiate Apple Sign-In flow
+   * Opens Apple sign-in in a popup or redirects to Apple OAuth
+   */
+  async function loginWithApple(): Promise<void> {
+    // Redirect to Apple OAuth endpoint
+    const appleAuthUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/v1/auth/apple`;
+    window.location.href = appleAuthUrl;
+  }
+  
+  /**
+   * Handle OAuth callback with tokens
+   * Called after successful OAuth redirect
+   */
+  function handleOAuthCallback(accessToken: string, refreshToken: string): void {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    
+    // Load user data
+    apiClient<User>('/api/v1/users/me')
+      .then(userData => {
+        setUser(userData);
+      })
+      .catch(error => {
+        console.error('Error loading user after OAuth:', error);
+        logout();
+      });
+  }
+  
   async function updateProfile(updates: {
     firstName?: string;
     lastName?: string;
@@ -89,6 +128,9 @@ export function useAuth() {
     isAuthenticated,
     isLoading,
     mockLogin,
+    loginWithGoogle,
+    loginWithApple,
+    handleOAuthCallback,
     logout,
     checkMockAuthStatus,
     updateProfile,

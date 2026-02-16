@@ -6,6 +6,7 @@ import { GroupsPage } from './pages/GroupsPage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LoginPage } from './pages/LoginPage';
+import { OAuthCallbackPage } from './pages/OAuthCallbackPage';
 import { SettingsPage } from './pages/SettingsPage';
 import './styles/globals.css';
 
@@ -14,6 +15,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
         
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>

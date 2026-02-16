@@ -6,7 +6,7 @@ import { prisma } from './prisma.js';
 import type { User as PrismaUser } from '@prisma/client';
 
 // Helper to convert Prisma user to Express user
-function toExpressUser(prismaUser: PrismaUser): Express.User {
+function toExpressUser(prismaUser: PrismaUser): { userId: string; email: string } {
   return {
     userId: prismaUser.id,
     email: prismaUser.email,
@@ -27,6 +27,7 @@ if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_CALLBACK_URL)
         callbackURL: env.GOOGLE_CALLBACK_URL,
         scope: ['profile', 'email'],
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (
         _accessToken: string,
         _refreshToken: string,
@@ -103,11 +104,14 @@ if (
         scope: ['email', 'name'],
         passReqToCallback: false,
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (
         _accessToken: string,
         _refreshToken: string,
         _idToken: string,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         profile: any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         done: any
       ) => {
         try {
