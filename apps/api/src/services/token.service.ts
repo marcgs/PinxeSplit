@@ -20,6 +20,8 @@ export function generateAccessToken(userId: string, email: string): string {
   };
 
   const options: SignOptions = {
+    // Type cast needed because env.JWT_ACCESS_TOKEN_EXPIRES_IN is string but needs StringValue type
+    // StringValue is from 'ms' package and accepts time strings like '15m', '7d', etc.
     expiresIn: env.JWT_ACCESS_TOKEN_EXPIRES_IN as StringValue,
   };
 
@@ -37,6 +39,8 @@ export async function generateRefreshToken(userId: string, email: string): Promi
   };
 
   const options: SignOptions = {
+    // Type cast needed because env.JWT_REFRESH_TOKEN_EXPIRES_IN is string but needs StringValue type
+    // StringValue is from 'ms' package and accepts time strings like '15m', '7d', etc.
     expiresIn: env.JWT_REFRESH_TOKEN_EXPIRES_IN as StringValue,
   };
 
