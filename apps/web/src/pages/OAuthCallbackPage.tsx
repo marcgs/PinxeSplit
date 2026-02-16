@@ -8,6 +8,8 @@ export function OAuthCallbackPage() {
   
   useEffect(() => {
     // Parse tokens from URL
+    // ⚠️ SECURITY NOTE: Reading tokens from URL is NOT recommended for production!
+    // This matches the backend approach for development. For production, use a more secure method.
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get('accessToken');
     const refreshToken = params.get('refreshToken');
@@ -21,7 +23,7 @@ export function OAuthCallbackPage() {
     
     if (accessToken && refreshToken) {
       handleOAuthCallback(accessToken, refreshToken);
-      // Clean URL
+      // Clean URL to remove tokens from browser history
       window.history.replaceState({}, document.title, '/auth/callback');
       // Redirect to home
       navigate('/', { replace: true });

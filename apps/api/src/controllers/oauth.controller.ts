@@ -5,10 +5,9 @@ import { prisma } from '../config/prisma.js';
 
 /**
  * Google OAuth 2.0 login handler
- * POST /api/v1/auth/google
+ * GET /api/v1/auth/google
  * 
- * Expects authorization code from client-side OAuth flow.
- * This endpoint handles the server-side token exchange.
+ * Initiates Google OAuth flow by redirecting to Google's authorization page.
  */
 export function googleAuth(req: Request, res: Response, next: NextFunction): void {
   passport.authenticate('google', { session: false }, async (err: Error | null, expressUser: { userId: string; email: string }) => {
@@ -137,8 +136,12 @@ export function googleCallback(req: Request, res: Response, next: NextFunction):
       const accessToken = generateAccessToken(user.id, user.email);
       const refreshToken = await generateRefreshToken(user.id, user.email);
       
-      // Redirect to frontend with tokens in URL (for development)
-      // In production, you might want to use a more secure method
+      // Redirect to frontend with tokens in URL
+      // ⚠️ SECURITY NOTE: Passing tokens in URL is NOT recommended for production!
+      // This approach is used for simplicity in development. For production, consider:
+      // - Using secure httpOnly cookies
+      // - POST request with body
+      // - One-time authorization code exchange pattern
       res.redirect(
         `${process.env.CORS_ORIGIN || 'http://localhost:5173'}/auth/callback?` +
         `accessToken=${encodeURIComponent(accessToken)}&` +
@@ -178,8 +181,12 @@ export function appleCallback(req: Request, res: Response, next: NextFunction): 
       const accessToken = generateAccessToken(user.id, user.email);
       const refreshToken = await generateRefreshToken(user.id, user.email);
       
-      // Redirect to frontend with tokens in URL (for development)
-      // In production, you might want to use a more secure method
+      // Redirect to frontend with tokens in URL
+      // ⚠️ SECURITY NOTE: Passing tokens in URL is NOT recommended for production!
+      // This approach is used for simplicity in development. For production, consider:
+      // - Using secure httpOnly cookies
+      // - POST request with body
+      // - One-time authorization code exchange pattern
       res.redirect(
         `${process.env.CORS_ORIGIN || 'http://localhost:5173'}/auth/callback?` +
         `accessToken=${encodeURIComponent(accessToken)}&` +

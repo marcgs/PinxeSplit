@@ -30,6 +30,8 @@ router.post('/mock', validate(mockLoginSchema), mockLogin);
 router.get('/mock/status', mockAuthStatus);
 
 // OAuth endpoints
+// ⚠️ TODO: Add rate limiting to OAuth endpoints for production to prevent abuse
+// Consider using express-rate-limit or similar middleware
 // Google OAuth
 router.get('/google', googleAuth);
 router.get('/google/callback', googleCallback);
