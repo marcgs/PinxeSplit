@@ -6,7 +6,7 @@ dotenv.config();
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().default('3001').transform((val) => parseInt(val, 10)).pipe(z.number().min(1).max(65535)),
-  DATABASE_URL: z.string().url().optional(),
+  DATABASE_URL: z.string().min(1).optional(),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
 });
 
