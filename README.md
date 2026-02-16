@@ -38,7 +38,7 @@ A modern expense splitting application built with React, TypeScript, and Express
 
 - Node.js >= 22.0.0
 - npm >= 10.0.0
-- PostgreSQL (for production)
+- Docker and Docker Compose (for running PostgreSQL)
 
 ### Installation
 
@@ -53,13 +53,64 @@ cd PinxeSplit
 npm install
 ```
 
-3. Set up environment variables:
+3. Set up PostgreSQL database:
+
+#### Option 1: Using Docker (Recommended)
+
+Run the automated setup script:
+```bash
+./setup-db.sh
+```
+
+This script will:
+- Create a `.env` file if it doesn't exist
+- Start PostgreSQL in a Docker container
+- Generate the Prisma client
+- Run database migrations
+
+Alternatively, you can manually control the database:
+```bash
+# Start PostgreSQL
+docker compose up -d postgres
+
+# Stop PostgreSQL
+docker compose down
+
+# View logs
+docker logs pinxesplit-postgres
+
+# Access PostgreSQL CLI
+docker exec -it pinxesplit-postgres psql -U user -d pinxesplit
+```
+
+#### Option 2: Using Local PostgreSQL
+
+If you prefer to use a locally installed PostgreSQL:
+
+1. Install PostgreSQL on your system:
+   - **macOS**: `brew install postgresql@16`
+   - **Ubuntu/Debian**: `sudo apt-get install postgresql-16`
+   - **Windows**: Download from [postgresql.org](https://www.postgresql.org/download/)
+
+2. Create the database:
+```bash
+createdb pinxesplit
+```
+
+3. Update the `DATABASE_URL` in your `.env` file with your local credentials.
+
+4. Run migrations:
+```bash
+npm run prisma:migrate --workspace=apps/api -- deploy
+```
+
+4. Set up environment variables (if not done in step 3):
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
-4. Start the development servers:
+5. Start the development servers:
 ```bash
 # Start both web and API servers
 npm run dev
@@ -119,8 +170,44 @@ PinxeSplit/
 │       ├── types/           # TypeScript types
 │       ├── schemas/         # Zod validation schemas
 │       └── utils/           # Utility functions
+├── docker-compose.yml       # PostgreSQL Docker setup
+├── setup-db.sh             # Database setup script
 └── turbo.json              # Turborepo configuration
 ```
+
+## Database Management
+
+### Using Prisma
+
+The project uses Prisma as the ORM. Here are common database commands:
+
+```bash
+# Generate Prisma client (after schema changes)
+npm run prisma:generate --workspace=apps/api
+
+# Create a new migration
+npm run prisma:migrate --workspace=apps/api -- dev --name your_migration_name
+
+# Apply migrations (production)
+npm run prisma:migrate --workspace=apps/api -- deploy
+
+# Open Prisma Studio (database GUI)
+npx prisma studio --schema=./apps/api/prisma/schema.prisma
+
+# Reset database (WARNING: deletes all data)
+npm run prisma:migrate --workspace=apps/api -- reset
+```
+
+### Database Connection
+
+The default Docker setup uses these credentials (configured in `docker-compose.yml`):
+- **Host**: `localhost`
+- **Port**: `5432`
+- **Database**: `pinxesplit`
+- **User**: `user`
+- **Password**: `password`
+
+Update `.env` file if you need different credentials.
 
 ## Available Scripts
 
