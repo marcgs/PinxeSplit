@@ -6,13 +6,13 @@ export interface ApiError {
 }
 
 let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+let refreshSubscribers: ((token: string | null) => void)[] = [];
 
-function subscribeTokenRefresh(callback: (token: string) => void) {
+function subscribeTokenRefresh(callback: (token: string | null) => void) {
   refreshSubscribers.push(callback);
 }
 
-function onRefreshed(token: string) {
+function onRefreshed(token: string | null) {
   refreshSubscribers.forEach((callback) => callback(token));
   refreshSubscribers = [];
 }
@@ -95,15 +95,24 @@ export async function apiClient<T = unknown>(
           headers,
         });
       } else {
-        // Refresh failed, redirect to login
+        // Refresh failed, notify waiting subscribers
+        onRefreshed(null);
+        
+        // Redirect to login
         window.location.href = '/login';
         throw new Error('Session expired');
       }
     } else {
       // Wait for the ongoing refresh to complete
-      const newToken = await new Promise<string>((resolve) => {
+      const newToken = await new Promise<string | null>((resolve) => {
         subscribeTokenRefresh(resolve);
       });
+      
+      // If refresh failed, redirect to login
+      if (!newToken) {
+        window.location.href = '/login';
+        throw new Error('Session expired');
+      }
       
       // Retry with the new token
       headers['Authorization'] = `Bearer ${newToken}`;
