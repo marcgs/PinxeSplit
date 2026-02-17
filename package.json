@@ -13,7 +13,12 @@
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
-    "clean": "turbo clean && rm -rf node_modules"
+    "clean": "turbo clean && rm -rf node_modules",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run prisma:migrate --workspace=apps/api",
+    "db:seed": "npx --workspace=apps/api prisma db seed",
+    "db:reset": "npx --workspace=apps/api prisma migrate reset"
   },
   "devDependencies": {
     "@eslint/js": "^8.57.1",

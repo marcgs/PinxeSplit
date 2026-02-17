@@ -10,18 +10,48 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Placeholder models - to be implemented in later phases
+// User model with authentication fields
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(uuid())
+  email           String   @unique
+  firstName       String?
+  lastName        String?
+  name            String   // Computed from firstName + lastName or email
+  avatar          String?
+  defaultCurrency String   @default("USD")
+  authProvider    String   @default("mock") // 'mock' or 'google' (for future OAuth)
+  authProviderId  String?  // OAuth provider user ID
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
+  // Relations
+  refreshTokens  RefreshToken[]
+  groupMemberships GroupMember[]
+  expensesPaid   Expense[]      @relation("ExpensePaidBy")
+  expenseSplits  ExpenseSplit[]
+  groupsCreated  Group[]        @relation("GroupCreatedBy")
+
+  @@index([email])
+  @@index([authProvider, authProviderId])
   @@map("users")
 }
 
+// Refresh tokens for JWT authentication
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// Group model
 model Group {
   id          String   @id @default(uuid())
   name        String
@@ -31,20 +61,99 @@ model Group {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Relations
+  createdBy User          @relation("GroupCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  members   GroupMember[]
+  expenses  Expense[]
+
+  @@index([createdById])
   @@map("groups")
 }
 
+// Group membership with roles
+model GroupMember {
+  id       String   @id @default(uuid())
+  groupId  String
+  userId   String
+  role     String   @default("member") // 'owner', 'admin', 'member'
+  joinedAt DateTime @default(now())
+
+  // Relations
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+  @@map("group_members")
+}
+
+// Expense categories
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  icon      String?
+  color     String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  expenses Expense[]
+
+  @@unique([name])
+  @@map("categories")
+}
+
+// Expense model
 model Expense {
   id          String   @id @default(uuid())
   groupId     String
   description String
-  amount      Int
+  amount      Int      // Amount in minor units (cents)
   currency    String
   paidById    String
-  category    String?
+  categoryId  String?
   date        DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Relations
+  group    Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  paidBy   User           @relation("ExpensePaidBy", fields: [paidById], references: [id], onDelete: Restrict)
+  category Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  splits   ExpenseSplit[]
+
+  @@index([groupId])
+  @@index([paidById])
+  @@index([categoryId])
+  @@index([date])
   @@map("expenses")
+}
+
+// Expense splits (how expense is divided among group members)
+model ExpenseSplit {
+  id         String   @id @default(uuid())
+  expenseId  String
+  userId     String
+  amount     Int      // Amount in minor units (cents)
+  percentage Int?     // For percentage-based splits (e.g., 25 = 25%)
+  createdAt  DateTime @default(now())
+
+  // Relations
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([expenseId])
+  @@index([userId])
+  @@map("expense_splits")
+}
+
+// Currency definitions
+model Currency {
+  code      String   @id // e.g., 'USD', 'EUR'
+  symbol    String   // e.g., '$', '€'
+  name      String   // e.g., 'US Dollar'
+  scale     Int      @default(100) // Minor unit scale (100 for most, 1 for JPY)
+  createdAt DateTime @default(now())
+
+  @@map("currencies")
 }
