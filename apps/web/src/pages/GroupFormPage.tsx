@@ -50,7 +50,15 @@ export function GroupFormPage() {
   };
 
   const mutation = isEditing ? updateMutation : createMutation;
-  const error = mutation.error as Error | null;
+  const rawError = mutation.error;
+  const error: Error | null =
+    rawError instanceof Error
+      ? rawError
+      : rawError && typeof rawError === 'object' && 'message' in rawError
+      ? new Error(String((rawError as { message?: unknown }).message ?? 'Failed to save group'))
+      : rawError
+      ? new Error('Failed to save group')
+      : null;
 
   if (isEditing && isLoadingGroup) {
     return (
