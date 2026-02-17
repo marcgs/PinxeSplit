@@ -484,6 +484,37 @@ export async function removeMember(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    // Authorization: only the member themself or an owner/admin can remove a member
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const requestingUserId = req.user.userId;
+
+    const requestingMember = await prisma.groupMember.findUnique({
+      where: {
+        groupId_userId: {
+          groupId: id,
+          userId: requestingUserId,
+        },
+      },
+    });
+
+    if (!requestingMember) {
+      // Requesting user is not a member of this group
+      res.status(403).json({ error: 'You are not a member of this group' });
+      return;
+    }
+
+    const isSelfRemoval = requestingUserId === userId;
+    const canManageMembers =
+      requestingMember.role === 'owner' || requestingMember.role === 'admin';
+
+    if (!isSelfRemoval && !canManageMembers) {
+      res.status(403).json({ error: 'Insufficient permissions to remove this member' });
+      return;
+    }
     // Ensure we don't remove the last remaining member of the group
     const memberCount = await prisma.groupMember.count({
       where: {
