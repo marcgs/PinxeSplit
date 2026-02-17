@@ -37,7 +37,7 @@ export function OAuthCallbackPage() {
   const { setUser } = useAuthStore();
 
   useEffect(() => {
-    async function handleOAuthCallback() {
+    void (async function handleOAuthCallback() {
       try {
         const accessToken = searchParams.get('accessToken');
         const refreshToken = searchParams.get('refreshToken');
@@ -69,9 +69,7 @@ export function OAuthCallbackPage() {
         console.error('Error handling OAuth callback:', error);
         navigate('/login?error=callback_failed', { replace: true });
       }
-    }
-
-    handleOAuthCallback();
+    })();
   }, [searchParams, navigate, setUser]);
 
   return (
