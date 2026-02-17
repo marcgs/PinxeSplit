@@ -81,69 +81,73 @@ if (
   env.APPLE_KEY_ID &&
   env.APPLE_PRIVATE_KEY_PATH
 ) {
-  const privateKey = readFileSync(env.APPLE_PRIVATE_KEY_PATH, 'utf8');
+  try {
+    const privateKey = readFileSync(env.APPLE_PRIVATE_KEY_PATH, 'utf8');
 
-  passport.use(
-    new AppleStrategy(
-      {
-        clientID: env.APPLE_CLIENT_ID,
-        teamID: env.APPLE_TEAM_ID,
-        keyID: env.APPLE_KEY_ID,
-        privateKeyString: privateKey,
-        callbackURL: '/api/v1/auth/apple/callback',
-        passReqToCallback: false,
-      },
-      async (_accessToken, _refreshToken, _idToken, profile, done) => {
-        try {
-          // Extract user info from Apple profile
-          const email = profile.email;
-          if (!email) {
-            return done(new Error('No email found in Apple profile'));
-          }
+    passport.use(
+      new AppleStrategy(
+        {
+          clientID: env.APPLE_CLIENT_ID,
+          teamID: env.APPLE_TEAM_ID,
+          keyID: env.APPLE_KEY_ID,
+          privateKeyString: privateKey,
+          callbackURL: '/api/v1/auth/apple/callback',
+          passReqToCallback: false,
+        },
+        async (_accessToken, _refreshToken, _idToken, profile, done) => {
+          try {
+            // Extract user info from Apple profile
+            const email = profile.email;
+            if (!email) {
+              return done(new Error('No email found in Apple profile'));
+            }
 
-          const firstName = profile.name?.firstName || '';
-          const lastName = profile.name?.lastName || '';
-          const name = profile.name
-            ? `${firstName} ${lastName}`.trim() || email
-            : email;
+            const firstName = profile.name?.firstName || '';
+            const lastName = profile.name?.lastName || '';
+            const name = profile.name
+              ? `${firstName} ${lastName}`.trim() || email
+              : email;
 
-          // Find or create user based on email (email-based deduplication)
-          let user = await prisma.user.findUnique({
-            where: { email },
-          });
+            // Find or create user based on email (email-based deduplication)
+            let user = await prisma.user.findUnique({
+              where: { email },
+            });
 
-          if (user) {
-            // User exists - update provider info if needed
-            if (user.authProvider === 'mock') {
-              user = await prisma.user.update({
-                where: { id: user.id },
+            if (user) {
+              // User exists - update provider info if needed
+              if (user.authProvider === 'mock') {
+                user = await prisma.user.update({
+                  where: { id: user.id },
+                  data: {
+                    authProvider: 'apple',
+                    authProviderId: profile.sub,
+                  },
+                });
+              }
+            } else {
+              // Create new user
+              user = await prisma.user.create({
                 data: {
+                  email,
+                  firstName,
+                  lastName,
+                  name,
                   authProvider: 'apple',
                   authProviderId: profile.sub,
                 },
               });
             }
-          } else {
-            // Create new user
-            user = await prisma.user.create({
-              data: {
-                email,
-                firstName,
-                lastName,
-                name,
-                authProvider: 'apple',
-                authProviderId: profile.sub,
-              },
-            });
-          }
 
-          return done(null, user);
-        } catch (error) {
-          return done(error as Error);
+            return done(null, user);
+          } catch (error) {
+            return done(error as Error);
+          }
         }
-      }
-    )
-  );
+      )
+    );
+  } catch (error) {
+    console.warn('Failed to configure Apple Sign-In strategy:', error);
+  }
 }
 
 export default passport;
