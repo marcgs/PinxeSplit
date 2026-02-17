@@ -94,12 +94,16 @@ model Category {
   name      String
   icon      String?
   color     String?
+  parentId  String?  // For hierarchical categories
   createdAt DateTime @default(now())
 
   // Relations
-  expenses Expense[]
+  parent     Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children   Category[] @relation("CategoryHierarchy")
+  expenses   Expense[]
 
   @@unique([name])
+  @@index([parentId])
   @@map("categories")
 }
 
