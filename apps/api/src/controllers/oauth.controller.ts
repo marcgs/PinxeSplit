@@ -33,8 +33,19 @@ export async function googleCallback(req: Request, res: Response, next: NextFunc
       const { accessToken, refreshToken } = await generateTokens(user.id, user.email);
 
       // Redirect to frontend with tokens
-      // NOTE: Passing tokens in URL is not secure for production
-      // Consider using secure httpOnly cookies or one-time codes
+      // ⚠️ SECURITY WARNING: Passing tokens in URL is insecure for production!
+      // Tokens will be exposed in:
+      // - Browser history
+      // - Server access logs
+      // - HTTP referrer headers
+      // - Browser developer tools
+      // 
+      // For production deployment, implement one of these alternatives:
+      // 1. Use secure httpOnly cookies with SameSite=Strict
+      // 2. Implement one-time authorization code exchange (OAuth 2.0 standard)
+      // 3. Use state parameter with server-side session storage
+      // 
+      // Current implementation is acceptable ONLY for development/testing.
       res.redirect(
         `${env.CORS_ORIGIN}/oauth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`
       );
@@ -70,8 +81,19 @@ export async function appleCallback(req: Request, res: Response, next: NextFunct
       const { accessToken, refreshToken } = await generateTokens(user.id, user.email);
 
       // Redirect to frontend with tokens
-      // NOTE: Passing tokens in URL is not secure for production
-      // Consider using secure httpOnly cookies or one-time codes
+      // ⚠️ SECURITY WARNING: Passing tokens in URL is insecure for production!
+      // Tokens will be exposed in:
+      // - Browser history
+      // - Server access logs
+      // - HTTP referrer headers
+      // - Browser developer tools
+      // 
+      // For production deployment, implement one of these alternatives:
+      // 1. Use secure httpOnly cookies with SameSite=Strict
+      // 2. Implement one-time authorization code exchange (OAuth 2.0 standard)
+      // 3. Use state parameter with server-side session storage
+      // 
+      // Current implementation is acceptable ONLY for development/testing.
       res.redirect(
         `${env.CORS_ORIGIN}/oauth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`
       );

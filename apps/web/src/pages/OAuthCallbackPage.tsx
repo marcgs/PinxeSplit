@@ -19,6 +19,17 @@ interface User {
  * OAuth Callback Page
  * Handles the OAuth redirect from the backend
  * Extracts tokens from URL params and loads user data
+ * 
+ * ⚠️ SECURITY WARNING: This implementation extracts tokens from URL parameters.
+ * This is insecure for production as tokens are exposed in:
+ * - Browser history
+ * - Server logs
+ * - Referrer headers
+ * 
+ * For production, implement:
+ * - Secure httpOnly cookies
+ * - One-time authorization code exchange
+ * - State parameter validation
  */
 export function OAuthCallbackPage() {
   const navigate = useNavigate();
