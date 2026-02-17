@@ -178,7 +178,6 @@ PinxeSplit/
 │       ├── schemas/         # Zod validation schemas
 │       └── utils/           # Utility functions
 ├── docker-compose.yml       # PostgreSQL Docker setup
-├── setup-db.sh             # Database setup script
 └── turbo.json              # Turborepo configuration
 ```
 
