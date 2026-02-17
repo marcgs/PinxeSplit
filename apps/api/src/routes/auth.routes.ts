@@ -35,6 +35,9 @@ router.post('/mock', validate(mockLoginSchema), mockLogin);
 router.get('/mock/status', mockAuthStatus);
 
 // OAuth routes
+// TODO: Add rate limiting middleware to prevent abuse (e.g., express-rate-limit)
+// Recommended: 5-10 requests per minute per IP for OAuth initiation
+//              2-3 requests per minute per IP for callback endpoints
 // Google OAuth
 router.get('/google', googleAuth);
 router.get('/google/callback', googleCallback);
