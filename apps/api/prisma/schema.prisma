@@ -19,7 +19,7 @@ model User {
   name            String   // Computed from firstName + lastName or email
   avatar          String?
   defaultCurrency String   @default("USD")
-  authProvider    String   @default("mock") // 'mock' or 'google' (for future OAuth)
+  authProvider    String   @default("mock") // 'mock', 'google', or 'apple'
   authProviderId  String?  // OAuth provider user ID
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

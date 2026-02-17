@@ -1,18 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../services/token.service.js';
 
-// Extend Express Request type to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-        email: string;
-      };
-    }
-  }
-}
-
 /**
  * Authentication guard middleware
  * Validates JWT access token and attaches user info to request
@@ -40,7 +28,7 @@ export const authGuard = async (
     req.user = {
       userId: decoded.userId,
       email: decoded.email,
-    };
+    } as Express.User;
     
     next();
   } catch (error) {

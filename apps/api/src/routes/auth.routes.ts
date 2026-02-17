@@ -1,6 +1,12 @@
 import { Router } from 'express';
 import { refreshToken, logout } from '../controllers/auth.controller.js';
 import { mockLogin, mockAuthStatus } from '../controllers/mockAuth.controller.js';
+import {
+  googleAuth,
+  googleCallback,
+  appleAuth,
+  appleCallback,
+} from '../controllers/oauth.controller.js';
 import { validate } from '../middleware/validate.js';
 import { z } from 'zod';
 
@@ -27,5 +33,14 @@ router.post('/logout', validate(logoutSchema), logout);
 // Mock authentication endpoints (only available when ENABLE_MOCK_AUTH=true)
 router.post('/mock', validate(mockLoginSchema), mockLogin);
 router.get('/mock/status', mockAuthStatus);
+
+// OAuth routes
+// Google OAuth
+router.get('/google', googleAuth);
+router.get('/google/callback', googleCallback);
+
+// Apple OAuth
+router.get('/apple', appleAuth);
+router.get('/apple/callback', appleCallback);
 
 export default router;
