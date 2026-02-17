@@ -38,7 +38,7 @@ A modern expense splitting application built with React, TypeScript, and Express
 
 - Node.js >= 22.0.0
 - npm >= 10.0.0
-- PostgreSQL (for production)
+- [Docker](https://docs.docker.com/get-docker/) (for local PostgreSQL)
 
 ### Installation
 
@@ -63,7 +63,22 @@ cp apps/api/.env.example apps/api/.env
 # Edit apps/api/.env with your configuration (especially JWT_SECRET)
 ```
 
-4. Start the development servers:
+4. Start the local PostgreSQL database:
+```bash
+npm run db:up
+```
+
+   This runs `docker compose up -d`, which starts a PostgreSQL 16 container
+   on port **5432** with the credentials from `docker-compose.yml`.
+   The default connection string in `.env.example` already matches.
+
+5. Run database migrations and seed:
+```bash
+npm run db:migrate
+npm run db:seed
+```
+
+6. Start the development servers:
 ```bash
 # Start both web and API servers
 npm run dev
@@ -134,6 +149,11 @@ PinxeSplit/
 - `npm run lint` - Lint all workspaces
 - `npm run typecheck` - Type check all workspaces
 - `npm run test` - Run tests in all workspaces
+- `npm run db:up` - Start the local PostgreSQL container
+- `npm run db:down` - Stop the local PostgreSQL container
+- `npm run db:migrate` - Run Prisma migrations
+- `npm run db:seed` - Seed the database
+- `npm run db:reset` - Reset the database (drop and re-create)
 
 ### Web App (`apps/web`)
 - `npm run dev --workspace=apps/web` - Start Vite dev server
