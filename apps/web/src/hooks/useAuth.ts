@@ -84,12 +84,36 @@ export function useAuth() {
     }
   }
   
+  async function handleLogout() {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      // Call backend to revoke refresh token
+      if (refreshToken) {
+        await apiClient('/api/v1/auth/logout', {
+          method: 'POST',
+          body: JSON.stringify({ refreshToken }),
+        }).catch((error) => {
+          // Log error but continue with local logout
+          console.error('Error revoking refresh token:', error);
+        });
+      }
+      
+      // Clear local storage and auth state
+      logout();
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Even if backend call fails, clear local state
+      logout();
+    }
+  }
+  
   return {
     user,
     isAuthenticated,
     isLoading,
     mockLogin,
-    logout,
+    logout: handleLogout,
     checkMockAuthStatus,
     updateProfile,
   };
