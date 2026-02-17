@@ -53,9 +53,7 @@ cd PinxeSplit
 npm install
 ```
 
-3. Set up PostgreSQL database:
-
-#### Option 1: Using Docker (Recommended)
+3. Set up PostgreSQL database using Docker:
 
 Run the automated setup script:
 ```bash
@@ -83,34 +81,7 @@ docker logs pinxesplit-postgres
 docker exec -it pinxesplit-postgres psql -U user -d pinxesplit
 ```
 
-#### Option 2: Using Local PostgreSQL
-
-If you prefer to use a locally installed PostgreSQL:
-
-1. Install PostgreSQL on your system:
-   - **macOS**: `brew install postgresql@16`
-   - **Ubuntu/Debian**: `sudo apt-get install postgresql-16`
-   - **Windows**: Download from [postgresql.org](https://www.postgresql.org/download/)
-
-2. Create the database:
-```bash
-createdb pinxesplit
-```
-
-3. Update the `DATABASE_URL` in your `.env` file with your local credentials.
-
-4. Run migrations:
-```bash
-npm run prisma:migrate --workspace=apps/api -- deploy
-```
-
-4. Set up environment variables (if not done in step 3):
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-5. Start the development servers:
+4. Start the development servers:
 ```bash
 # Start both web and API servers
 npm run dev
