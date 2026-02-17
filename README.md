@@ -57,22 +57,29 @@ npm install
 
 #### Option 1: Using Docker (Recommended)
 
-Run the automated setup script:
+1. Create a `.env` file (if it doesn't exist):
 ```bash
-./setup-db.sh
+cp .env.example .env
+# Edit .env with your configuration if needed
 ```
 
-This script will:
-- Create a `.env` file if it doesn't exist
-- Start PostgreSQL in a Docker container
-- Generate the Prisma client
-- Run database migrations
-
-Alternatively, you can manually control the database:
+2. Start PostgreSQL in a Docker container:
 ```bash
-# Start PostgreSQL
 docker compose up -d postgres
+```
 
+3. Wait for PostgreSQL to be ready (takes a few seconds), then generate the Prisma client:
+```bash
+npm run prisma:generate --workspace=apps/api
+```
+
+4. Run database migrations:
+```bash
+npm run prisma:migrate --workspace=apps/api -- deploy
+```
+
+**Additional Docker commands:**
+```bash
 # Stop PostgreSQL
 docker compose down
 
