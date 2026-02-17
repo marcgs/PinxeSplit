@@ -4,7 +4,7 @@ import { prisma } from '../config/prisma.js';
 /**
  * Get all currencies sorted alphabetically by code
  */
-export async function getCurrencies(req: Request, res: Response) {
+export async function getCurrencies(_req: Request, res: Response) {
   try {
     const currencies = await prisma.currency.findMany({
       orderBy: {
