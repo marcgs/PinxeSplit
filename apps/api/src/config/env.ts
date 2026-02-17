@@ -16,6 +16,14 @@ const envSchema = z.object({
   
   // Mock Authentication (for development only)
   ENABLE_MOCK_AUTH: z.string().transform((val) => val === 'true').default('false'),
+  
+  // OAuth Configuration
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  APPLE_CLIENT_ID: z.string().optional(),
+  APPLE_TEAM_ID: z.string().optional(),
+  APPLE_KEY_ID: z.string().optional(),
+  APPLE_PRIVATE_KEY_PATH: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

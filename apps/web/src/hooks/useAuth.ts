@@ -64,6 +64,24 @@ export function useAuth() {
     }
   }
   
+  /**
+   * Initiate Google OAuth login flow
+   * Redirects to backend OAuth endpoint
+   */
+  function loginWithGoogle() {
+    // Redirect to backend Google OAuth endpoint
+    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/v1/auth/google`;
+  }
+  
+  /**
+   * Initiate Apple OAuth login flow
+   * Redirects to backend OAuth endpoint
+   */
+  function loginWithApple() {
+    // Redirect to backend Apple OAuth endpoint
+    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/v1/auth/apple`;
+  }
+  
   async function updateProfile(updates: {
     firstName?: string;
     lastName?: string;
@@ -113,6 +131,8 @@ export function useAuth() {
     isAuthenticated,
     isLoading,
     mockLogin,
+    loginWithGoogle,
+    loginWithApple,
     logout: handleLogout,
     checkMockAuthStatus,
     updateProfile,

@@ -63,6 +63,22 @@ export async function generateRefreshToken(userId: string, email: string): Promi
 }
 
 /**
+ * Generate both access and refresh tokens
+ */
+export async function generateTokens(userId: string, email: string): Promise<{
+  accessToken: string;
+  refreshToken: string;
+}> {
+  const accessToken = generateAccessToken(userId, email);
+  const refreshToken = await generateRefreshToken(userId, email);
+  
+  return {
+    accessToken,
+    refreshToken,
+  };
+}
+
+/**
  * Verify and decode an access token
  */
 export function verifyAccessToken(token: string): JwtPayload {
