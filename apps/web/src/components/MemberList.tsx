@@ -17,7 +17,8 @@ export function MemberList({ members, groupCreatorId, onRemoveMember, isRemoving
       {members.map((member) => {
         const isCurrentUser = user?.id === member.userId;
         const isCreator = member.userId === groupCreatorId;
-        const canRemove = user?.id === member.userId || !isCreator;
+        const isGroupOwner = user?.id === groupCreatorId;
+        const canRemove = isCurrentUser || (isGroupOwner && !isCreator);
 
         return (
           <div
