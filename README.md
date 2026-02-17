@@ -55,8 +55,12 @@ npm install
 
 3. Set up environment variables:
 ```bash
-cp .env.example .env
-# Edit .env with your configuration
+# Web app .env
+cp apps/web/.env.example apps/web/.env
+
+# API .env
+cp apps/api/.env.example apps/api/.env
+# Edit apps/api/.env with your configuration (especially JWT_SECRET)
 ```
 
 4. Start the development servers:
