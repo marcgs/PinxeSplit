@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { splitEvenly, fromCents } from '@pinxesplit/shared';
 import type { SplitParticipant } from '../hooks/useSplitCalculator';
 
@@ -21,10 +21,16 @@ export function EqualSplit({
   onToggleParticipant,
   onUpdate,
 }: EqualSplitProps) {
+  // Memoize the inclusion state to avoid unnecessary recalculations
+  const inclusionState = useMemo(
+    () => participants.map(p => p.included).join(','),
+    [participants]
+  );
+
   // Auto-compute splits when participants or amount changes
   useEffect(() => {
     onUpdate();
-  }, [participants.map(p => p.included).join(','), totalAmount, onUpdate]);
+  }, [inclusionState, totalAmount, onUpdate]);
 
   const includedParticipants = participants.filter((p) => p.included);
   const splits = includedParticipants.length > 0

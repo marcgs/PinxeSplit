@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { splitByShares, fromCents } from '@pinxesplit/shared';
 import type { SplitParticipant } from '../hooks/useSplitCalculator';
 
@@ -23,10 +23,16 @@ export function SharesSplit({
   onUpdateShares,
   onUpdate,
 }: SharesSplitProps) {
+  // Memoize the shares state to avoid unnecessary recalculations
+  const sharesState = useMemo(
+    () => participants.map(p => `${p.included}:${p.shares}`).join(','),
+    [participants]
+  );
+
   // Auto-update when shares change
   useEffect(() => {
     onUpdate();
-  }, [participants.map(p => `${p.included}:${p.shares}`).join(','), totalAmount, onUpdate]);
+  }, [sharesState, totalAmount, onUpdate]);
 
   const includedParticipants = participants.filter((p) => p.included);
   const totalShares = includedParticipants.reduce((sum, p) => sum + (p.shares || 1), 0);
