@@ -1,0 +1,20 @@
+import { Request, Response } from 'express';
+import { prisma } from '../config/prisma.js';
+
+/**
+ * Get all currencies sorted alphabetically by code
+ */
+export async function getCurrencies(_req: Request, res: Response) {
+  try {
+    const currencies = await prisma.currency.findMany({
+      orderBy: {
+        code: 'asc',
+      },
+    });
+
+    res.json(currencies);
+  } catch (error) {
+    console.error('Error fetching currencies:', error);
+    res.status(500).json({ error: 'Failed to fetch currencies' });
+  }
+}

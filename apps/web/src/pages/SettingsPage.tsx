@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { PageContainer } from '../components/PageContainer';
-import { CURRENCY_CODES } from '@pinxesplit/shared';
+import { CurrencyPicker } from '../components/CurrencyPicker';
 
 export function SettingsPage() {
   const { user, updateProfile, logout } = useAuth();
@@ -135,18 +135,11 @@ export function SettingsPage() {
                 <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">
                   Default Currency
                 </label>
-                <select
-                  id="currency"
+                <CurrencyPicker
                   value={defaultCurrency}
-                  onChange={(e) => setDefaultCurrency(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {CURRENCY_CODES.map((code) => (
-                    <option key={code} value={code}>
-                      {code}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setDefaultCurrency}
+                  placeholder="Select your default currency..."
+                />
               </div>
               
               {error && (
