@@ -59,6 +59,7 @@ export function MemberList({ members, groupCreatorId, onRemoveMember, isRemoving
                   disabled={isRemoving}
                   className="rounded-md p-2 text-destructive hover:bg-destructive/10 disabled:opacity-50"
                   title={isCurrentUser ? 'Leave group' : 'Remove member'}
+                  aria-label={isCurrentUser ? 'Leave group' : 'Remove member'}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

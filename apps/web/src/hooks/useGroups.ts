@@ -79,9 +79,9 @@ export function useGroups() {
 /**
  * Hook to fetch a specific group by ID
  */
-export function useGroup(id: string) {
+export function useGroup(id: string | undefined) {
   return useQuery({
-    queryKey: groupKeys.detail(id),
+    queryKey: groupKeys.detail(id || ''),
     queryFn: async () => {
       const data = await apiClient<Group>(`/api/v1/groups/${id}`);
       return data;

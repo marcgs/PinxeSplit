@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import { useCreateGroup, useUpdateGroup, useGroup } from '@/hooks/useGroups';
+import { CURRENCY_CODES } from '@pinxesplit/shared';
 
 export function GroupFormPage() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export function GroupFormPage() {
   const [description, setDescription] = useState('');
   const [currency, setCurrency] = useState('USD');
 
-  const { data: group, isLoading: isLoadingGroup } = useGroup(id || '');
+  const { data: group, isLoading: isLoadingGroup } = useGroup(id);
   const createMutation = useCreateGroup();
   const updateMutation = useUpdateGroup(id || '');
 
@@ -118,12 +119,23 @@ export function GroupFormPage() {
               onChange={(e) => setCurrency(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
+              {/* Major currencies first */}
               <option value="USD">USD - US Dollar</option>
               <option value="EUR">EUR - Euro</option>
               <option value="GBP">GBP - British Pound</option>
               <option value="JPY">JPY - Japanese Yen</option>
-              <option value="CAD">CAD - Canadian Dollar</option>
+              <option value="CNY">CNY - Chinese Yuan</option>
               <option value="AUD">AUD - Australian Dollar</option>
+              <option value="CAD">CAD - Canadian Dollar</option>
+              <option value="CHF">CHF - Swiss Franc</option>
+              <option value="INR">INR - Indian Rupee</option>
+              <option value="MXN">MXN - Mexican Peso</option>
+              {/* Divider */}
+              <option disabled>─────────────</option>
+              {/* All other currencies */}
+              {CURRENCY_CODES.filter(code => !['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'AUD', 'CAD', 'CHF', 'INR', 'MXN'].includes(code)).map(code => (
+                <option key={code} value={code}>{code}</option>
+              ))}
             </select>
           </div>
 

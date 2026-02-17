@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
 interface AddMemberDialogProps {
@@ -11,6 +11,13 @@ interface AddMemberDialogProps {
 
 export function AddMemberDialog({ isOpen, onClose, onAddMember, isLoading, error }: AddMemberDialogProps) {
   const [email, setEmail] = useState('');
+
+  // Clear email when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      setEmail('');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -28,13 +35,19 @@ export function AddMemberDialog({ isOpen, onClose, onAddMember, isLoading, error
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg bg-background p-6 shadow-lg">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-member-title"
+        className="w-full max-w-md rounded-lg bg-background p-6 shadow-lg"
+      >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Add Member</h2>
+          <h2 id="add-member-title" className="text-xl font-semibold">Add Member</h2>
           <button
             onClick={handleClose}
             className="rounded-md p-1 hover:bg-accent"
             disabled={isLoading}
+            aria-label="Close dialog"
           >
             <X className="h-5 w-5" />
           </button>

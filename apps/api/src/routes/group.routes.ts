@@ -11,19 +11,32 @@ import {
 import { authGuard } from '../middleware/authGuard.js';
 import { validate } from '../middleware/validate.js';
 import { z } from 'zod';
+import { CURRENCY_CODES, type CurrencyCode } from '@pinxesplit/shared';
 
 const router = Router();
 
 const createGroupSchema = z.object({
   name: z.string().trim().min(1).max(100),
   description: z.string().trim().max(500).optional(),
-  currency: z.string().length(3).optional(), // ISO currency code
+  currency: z
+    .string()
+    .length(3)
+    .refine((code): code is CurrencyCode => CURRENCY_CODES.includes(code as CurrencyCode), {
+      message: 'Invalid currency code',
+    })
+    .optional(), // ISO currency code
 });
 
 const updateGroupSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
   description: z.string().trim().max(500).optional(),
-  currency: z.string().length(3).optional(),
+  currency: z
+    .string()
+    .length(3)
+    .refine((code): code is CurrencyCode => CURRENCY_CODES.includes(code as CurrencyCode), {
+      message: 'Invalid currency code',
+    })
+    .optional(),
 });
 
 const addMemberSchema = z.object({

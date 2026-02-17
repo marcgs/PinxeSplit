@@ -438,14 +438,14 @@ export async function removeMember(req: Request, res: Response): Promise<void> {
     const { id, userId } = req.params;
 
     // Check if requesting user is a member of the group
-    const membership = await prisma.groupMember.findFirst({
+    const requestingMember = await prisma.groupMember.findFirst({
       where: {
         groupId: id,
         userId: req.user.userId,
       },
     });
 
-    if (!membership) {
+    if (!requestingMember) {
       res.status(404).json({ error: 'Group not found' });
       return;
     }
@@ -457,6 +457,15 @@ export async function removeMember(req: Request, res: Response): Promise<void> {
 
     if (!group || group.deletedAt) {
       res.status(404).json({ error: 'Group not found' });
+      return;
+    }
+
+    // Authorization: only the member themself or an owner can remove a member
+    const isSelfRemoval = req.user.userId === userId;
+    const canManageMembers = requestingMember.role === 'owner';
+
+    if (!isSelfRemoval && !canManageMembers) {
+      res.status(403).json({ error: 'Insufficient permissions to remove this member' });
       return;
     }
 
@@ -475,14 +484,28 @@ export async function removeMember(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    // Ensure we don't remove the last remaining member of the group
+    const memberCount = await prisma.groupMember.count({
+      where: {
+        groupId: id,
+      },
+    });
+
+    if (memberCount <= 1) {
+      res.status(409).json({
+        error: 'Cannot remove the last remaining member of the group',
+      });
+      return;
+    }
+
     // Calculate the balance for the member being removed
-    // A member owes money if they have expense splits where the amount is positive
-    // (they owe more than they paid)
+    // Only consider expenses in the group's currency to avoid mixing currencies
     const memberExpenseSplits = await prisma.expenseSplit.findMany({
       where: {
         userId,
         expense: {
           groupId: id,
+          currency: group.currency, // Only expenses matching group currency
         },
       },
       include: {
@@ -490,6 +513,7 @@ export async function removeMember(req: Request, res: Response): Promise<void> {
           select: {
             paidById: true,
             amount: true,
+            currency: true,
           },
         },
       },
@@ -499,6 +523,7 @@ export async function removeMember(req: Request, res: Response): Promise<void> {
       where: {
         groupId: id,
         paidById: userId,
+        currency: group.currency, // Only expenses matching group currency
       },
       select: {
         amount: true,
@@ -506,10 +531,10 @@ export async function removeMember(req: Request, res: Response): Promise<void> {
     });
 
     // Calculate total paid by the member
-    const totalPaid = memberExpensesPaid.reduce((sum, expense) => sum + expense.amount, 0);
+    const totalPaid = memberExpensesPaid.reduce((sum: number, expense: { amount: number }) => sum + expense.amount, 0);
 
     // Calculate total owed by the member (sum of their splits)
-    const totalOwed = memberExpenseSplits.reduce((sum, split) => sum + split.amount, 0);
+    const totalOwed = memberExpenseSplits.reduce((sum: number, split: { amount: number }) => sum + split.amount, 0);
 
     // Calculate the balance (positive means they owe, negative means they are owed)
     const balance = totalOwed - totalPaid;
