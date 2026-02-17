@@ -43,8 +43,8 @@ export function GroupDetailPage() {
     try {
       await addMemberMutation.mutateAsync({ email });
       setIsAddMemberOpen(false);
-    } catch (error: any) {
-      const message = error?.message || 'Failed to add member';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to add member';
       setAddMemberError(message);
     }
   };
@@ -67,8 +67,8 @@ export function GroupDetailPage() {
         if (isCurrentUser) {
           navigate('/groups');
         }
-      } catch (error: any) {
-        const message = error?.message || 'Failed to remove member';
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to remove member';
         alert(message);
       }
     }
