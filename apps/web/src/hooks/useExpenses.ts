@@ -151,7 +151,7 @@ export function useCreateExpense(groupId: string) {
       );
       return expense;
     },
-    onSuccess: (newExpense) => {
+    onSuccess: (_newExpense) => {
       // Invalidate expense lists for this group
       queryClient.invalidateQueries({ queryKey: expenseKeys.lists() });
       // Invalidate group detail to update expense count

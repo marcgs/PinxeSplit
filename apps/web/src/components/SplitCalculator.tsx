@@ -13,7 +13,7 @@ interface SplitCalculatorProps {
   currency: string;
   scale?: number;
   onSplitsChange: (splits: Split[]) => void;
-  initialSplits?: Split[];
+  initialSplits?: Split[]; // eslint-disable-line @typescript-eslint/no-unused-vars
 }
 
 export function SplitCalculator({
@@ -23,7 +23,6 @@ export function SplitCalculator({
   currency,
   scale = 100,
   onSplitsChange,
-  initialSplits,
 }: SplitCalculatorProps) {
   const calculator = useSplitCalculator(members, defaultPayerId, amount, currency, scale);
   const [activeTab, setActiveTab] = useState<SplitType>('equal');

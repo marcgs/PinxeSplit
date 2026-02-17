@@ -69,8 +69,8 @@ export function ExpenseFormPage() {
         await updateExpense.mutateAsync(expenseData);
         navigate(`/expenses/${expenseId}`);
       } else {
-        const newExpense = await createExpense.mutateAsync(expenseData);
-        navigate(`/expenses/${newExpense.id}`);
+        await createExpense.mutateAsync(expenseData);
+        navigate(`/groups/${groupId}`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save expense');

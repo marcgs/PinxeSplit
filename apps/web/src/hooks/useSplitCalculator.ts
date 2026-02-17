@@ -4,7 +4,6 @@ import {
   splitByPercentages,
   splitByShares,
   splitByAmounts,
-  toCents,
 } from '@pinxesplit/shared';
 
 export type SplitType = 'equal' | 'amount' | 'percentage' | 'shares';
@@ -180,7 +179,7 @@ export function useSplitCalculator(
         case 'percentage': {
           const percentages = includedParticipants.map((p) => ({
             id: p.userId,
-            percentage: p.percentage || 0,
+            pct: p.percentage || 0,
           }));
           owedShares = splitByPercentages(totalAmount, percentages, payerId);
           break;

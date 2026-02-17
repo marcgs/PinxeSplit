@@ -38,7 +38,7 @@ export function PercentageSplit({
     if (includedParticipants.length > 0 && Math.abs(totalPercentage - 100) < 0.01) {
       const percentages = includedParticipants.map((p) => ({
         id: p.userId,
-        percentage: p.percentage || 0,
+        pct: p.percentage || 0,
       }));
       // Use first participant as creator for remainder distribution
       computedAmounts = splitByPercentages(
