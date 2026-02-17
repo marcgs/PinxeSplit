@@ -578,6 +578,19 @@ export async function removeMember(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    // Ensure we don't remove the last remaining member of the group
+    const memberCount = await prisma.groupMember.count({
+      where: {
+        groupId: id,
+      },
+    });
+
+    if (memberCount <= 1) {
+      res.status(409).json({
+        error: 'Cannot remove the last remaining member of the group',
+      });
+      return;
+    }
     // Remove member
     await prisma.groupMember.delete({
       where: {
