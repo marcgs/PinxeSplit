@@ -68,12 +68,17 @@ cp .env.example .env
 docker compose up -d postgres
 ```
 
-3. Wait for PostgreSQL to be ready (takes a few seconds), then generate the Prisma client:
+3. Wait for PostgreSQL to be ready (you can check with this command):
+```bash
+docker exec pinxesplit-postgres pg_isready -U user -d pinxesplit
+```
+
+4. Generate the Prisma client:
 ```bash
 npm run prisma:generate --workspace=apps/api
 ```
 
-4. Run database migrations:
+5. Run database migrations:
 ```bash
 npm run prisma:migrate --workspace=apps/api -- deploy
 ```
