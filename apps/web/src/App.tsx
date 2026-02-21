@@ -7,6 +7,8 @@ import { GroupsPage } from './pages/GroupsPage';
 import { GroupDetailPage } from './pages/GroupDetailPage';
 import { GroupFormPage } from './pages/GroupFormPage';
 import { ExpensesPage } from './pages/ExpensesPage';
+import { ExpenseDetailPage } from './pages/ExpenseDetailPage';
+import { ExpenseFormPage } from './pages/ExpenseFormPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LoginPage } from './pages/LoginPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -35,7 +37,10 @@ function App() {
               <Route path="/groups/new" element={<GroupFormPage />} />
               <Route path="/groups/:id" element={<GroupDetailPage />} />
               <Route path="/groups/:id/edit" element={<GroupFormPage />} />
+              <Route path="/groups/:groupId/expenses/new" element={<ExpenseFormPage />} />
               <Route path="/expenses" element={<ExpensesPage />} />
+              <Route path="/expenses/:id" element={<ExpenseDetailPage />} />
+              <Route path="/expenses/:expenseId/edit" element={<ExpenseFormPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>

@@ -1,6 +1,3 @@
--- DropIndex
-DROP INDEX "refresh_tokens_token_idx";
-
 -- AlterTable
 ALTER TABLE "groups" ADD COLUMN     "deletedAt" TIMESTAMP(3);
 

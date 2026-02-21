@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash2, UserPlus } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, UserPlus, Plus } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import { MemberList } from '@/components/MemberList';
 import { AddMemberDialog } from '@/components/AddMemberDialog';
+import { ExpenseListView } from '@/components/ExpenseListView';
 import { useGroup, useDeleteGroup, useAddMember, useRemoveMember } from '@/hooks/useGroups';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -11,7 +12,7 @@ export function GroupDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'expenses' | 'balances' | 'members' | 'activity'>('members');
+  const [activeTab, setActiveTab] = useState<'expenses' | 'balances' | 'members' | 'activity'>('expenses');
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [addMemberError, setAddMemberError] = useState<string | null>(null);
 
@@ -156,6 +157,22 @@ export function GroupDetailPage() {
 
         {/* Tab Content */}
         <div className="space-y-4">
+          {activeTab === 'expenses' && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Expenses</h3>
+                <button
+                  onClick={() => navigate(`/groups/${id}/expenses/new`)}
+                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Expense
+                </button>
+              </div>
+              <ExpenseListView groupId={id || ''} />
+            </>
+          )}
+
           {activeTab === 'members' && (
             <>
               <div className="flex items-center justify-between">
@@ -177,14 +194,6 @@ export function GroupDetailPage() {
                 isRemoving={removeMemberMutation.isPending}
               />
             </>
-          )}
-
-          {activeTab === 'expenses' && (
-            <div className="rounded-lg border bg-card p-12 text-center">
-              <p className="text-muted-foreground">
-                No expenses yet. Expenses feature coming soon!
-              </p>
-            </div>
           )}
 
           {activeTab === 'balances' && (

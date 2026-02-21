@@ -111,16 +111,17 @@ model Category {
 
 // Expense model
 model Expense {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   groupId     String
   description String
-  amount      Int      // Amount in minor units (cents)
+  amount      Int       // Amount in minor units (cents)
   currency    String
   paidById    String
   categoryId  String?
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  date        DateTime  @default(now())
+  deletedAt   DateTime? // For soft deletes
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Relations
   group    Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
@@ -132,6 +133,7 @@ model Expense {
   @@index([paidById])
   @@index([categoryId])
   @@index([date])
+  @@index([deletedAt])
   @@map("expenses")
 }
 
