@@ -6,6 +6,7 @@ interface PercentageSplitProps {
   totalAmount: number;
   currency: string;
   scale: number;
+  payerId: string;
   onToggleParticipant: (userId: string) => void;
   onUpdatePercentage: (userId: string, percentage: number) => void;
   onUpdate: () => void;
@@ -16,6 +17,7 @@ export function PercentageSplit({
   totalAmount,
   currency,
   scale,
+  payerId,
   onToggleParticipant,
   onUpdatePercentage,
   onUpdate,
@@ -40,11 +42,11 @@ export function PercentageSplit({
         id: p.userId,
         pct: p.percentage || 0,
       }));
-      // Use first participant as creator for remainder distribution
+      // Use payerId for remainder distribution
       computedAmounts = splitByPercentages(
         totalAmount,
         percentages,
-        includedParticipants[0].userId
+        payerId
       );
     }
   } catch (error) {

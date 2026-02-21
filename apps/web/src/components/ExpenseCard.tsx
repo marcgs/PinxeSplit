@@ -1,5 +1,6 @@
 import { fromCents } from '@pinxesplit/shared';
 import type { Expense } from '../hooks/useExpenses';
+import { getCurrencyScale } from '../utils/currency';
 
 interface ExpenseCardProps {
   expense: Expense;
@@ -13,7 +14,7 @@ export function ExpenseCard({ expense, onClick }: ExpenseCardProps) {
     year: 'numeric',
   });
 
-  const scale = 100; // Default scale for most currencies
+  const scale = getCurrencyScale(expense.currency);
 
   return (
     <div

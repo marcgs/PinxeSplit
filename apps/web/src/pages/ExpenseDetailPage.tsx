@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useExpense, useDeleteExpense } from '../hooks/useExpenses';
 import { fromCents } from '@pinxesplit/shared';
 import { PageContainer } from '../components/PageContainer';
+import { getCurrencyScale } from '../utils/currency';
 
 export function ExpenseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -44,7 +45,7 @@ export function ExpenseDetailPage() {
     );
   }
 
-  const scale = 100; // Default scale
+  const scale = getCurrencyScale(expense.currency);
   const formattedDate = new Date(expense.date).toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',

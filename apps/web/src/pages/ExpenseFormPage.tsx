@@ -5,18 +5,22 @@ import { useExpense, useCreateExpense, useUpdateExpense } from '../hooks/useExpe
 import { toCents } from '@pinxesplit/shared';
 import { PageContainer } from '../components/PageContainer';
 import { SplitCalculator } from '../components/SplitCalculator';
+import { getCurrencyScale } from '../utils/currency';
+import { useAuthStore } from '../stores/auth.store';
 import type { Split } from '../hooks/useSplitCalculator';
 
 export function ExpenseFormPage() {
   const { groupId, expenseId } = useParams<{ groupId?: string; expenseId?: string }>();
   const navigate = useNavigate();
   const isEditing = !!expenseId;
+  const { user } = useAuthStore();
 
-  // Fetch group data
-  const { data: group, isLoading: groupLoading } = useGroup(groupId);
+  // Fetch group data - derive groupId from expense if in edit mode
   const { data: expense, isLoading: expenseLoading } = useExpense(expenseId);
+  const effectiveGroupId = groupId || expense?.groupId;
+  const { data: group, isLoading: groupLoading } = useGroup(effectiveGroupId);
   
-  const createExpense = useCreateExpense(groupId || '');
+  const createExpense = useCreateExpense(effectiveGroupId || '');
   const updateExpense = useUpdateExpense(expenseId || '');
 
   // Form state
@@ -26,18 +30,19 @@ export function ExpenseFormPage() {
   const [splits, setSplits] = useState<Split[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Get current user ID (would come from auth context in real app)
-  const currentUserId = group?.members[0]?.userId || '';
+  // Get current user ID from auth store
+  const currentUserId = user?.id || '';
 
   // Pre-populate form when editing
   useEffect(() => {
-    if (expense && isEditing) {
+    if (expense && isEditing && group) {
+      const scale = getCurrencyScale(group.currency);
       setDescription(expense.description);
-      setAmount((expense.amount / 100).toFixed(2));
+      setAmount((expense.amount / scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2));
       setDate(new Date(expense.date).toISOString().split('T')[0]);
       // Note: splits will be pre-populated via SplitCalculator's initialSplits prop
     }
-  }, [expense, isEditing]);
+  }, [expense, isEditing, group]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,13 +58,18 @@ export function ExpenseFormPage() {
       return;
     }
 
-    const amountInCents = toCents(parseFloat(amount), 100);
+    const scale = getCurrencyScale(group.currency);
+    const amountInCents = toCents(parseFloat(amount), scale);
+
+    // Find the payer from splits (user with paidShare > 0)
+    const payerSplit = splits.find((split) => split.paidShare > 0);
+    const payerId = payerSplit?.userId || currentUserId;
 
     const expenseData = {
       description,
       amount: amountInCents,
       currency: group.currency,
-      paidById: splits[0]?.userId || currentUserId,
+      paidById: payerId,
       date: new Date(date).toISOString(),
       splits,
     };
@@ -70,7 +80,7 @@ export function ExpenseFormPage() {
         navigate(`/expenses/${expenseId}`);
       } else {
         await createExpense.mutateAsync(expenseData);
-        navigate(`/groups/${groupId}`);
+        navigate(`/groups/${effectiveGroupId}`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save expense');

@@ -18,7 +18,7 @@ const splitSchema = z.object({
   userId: z.string().uuid(),
   paidShare: z.number().int().min(0), // Amount user paid (in minor units/cents)
   owedShare: z.number().int().min(0), // Amount user owes (in minor units/cents)
-  percentage: z.number().int().min(0).max(100).optional(), // For percentage splits
+  percentage: z.number().min(0).max(100).multipleOf(0.01).optional(), // For percentage splits (supports 0.01% steps)
 });
 
 const createExpenseSchema = z.object({

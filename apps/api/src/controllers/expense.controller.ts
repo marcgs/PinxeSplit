@@ -51,7 +51,7 @@ export async function createExpense(req: Request, res: Response): Promise<void> 
     }
 
     // Verify all split userIds are active group members
-    const groupMemberIds = group.members.map((m) => m.userId);
+    const groupMemberIds = group.members.map((m: { userId: string }) => m.userId);
     const splitUserIds = splits.map((split: { userId: string }) => split.userId);
     const invalidUserIds = splitUserIds.filter((userId: string) => !groupMemberIds.includes(userId));
 
@@ -59,6 +59,15 @@ export async function createExpense(req: Request, res: Response): Promise<void> 
       res.status(400).json({
         error: 'Invalid split: all users must be active group members',
         invalidUserIds,
+      });
+      return;
+    }
+
+    // Check for duplicate userIds in splits
+    const uniqueUserIds = new Set(splitUserIds);
+    if (uniqueUserIds.size !== splitUserIds.length) {
+      res.status(400).json({
+        error: 'Invalid split: duplicate user IDs are not allowed',
       });
       return;
     }
@@ -88,13 +97,15 @@ export async function createExpense(req: Request, res: Response): Promise<void> 
     }
 
     // Create expense with splits in transaction
-    const expense = await prisma.$transaction(async (tx) => {
+    const expense = await prisma.$transaction(async (tx: typeof prisma) => {
       const newExpense = await tx.expense.create({
         data: {
           groupId,
           description,
           amount,
-          currency: currency || group.currency,
+          currency: currency && currency !== group.currency 
+            ? (() => { throw new Error(`Currency must match group currency (${group.currency})`); })()
+            : (currency || group.currency),
           paidById,
           categoryId: categoryId || null,
           date: date ? new Date(date) : new Date(),
@@ -102,7 +113,7 @@ export async function createExpense(req: Request, res: Response): Promise<void> 
             create: splits.map((split: { userId: string; paidShare: number; owedShare: number; percentage?: number }) => ({
               userId: split.userId,
               amount: split.owedShare, // Store owedShare as the split amount
-              percentage: split.percentage || null,
+              percentage: split.percentage ?? null,
             })),
           },
         },
@@ -153,8 +164,33 @@ export async function getExpenses(req: Request, res: Response): Promise<void> {
     }
 
     const groupId = req.params.id;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+    
+    // Validate pagination parameters
+    const rawPage = req.query.page as string | undefined;
+    const rawLimit = req.query.limit as string | undefined;
+    
+    let page = 1;
+    let limit = 20;
+    const MAX_LIMIT = 100;
+    
+    if (rawPage !== undefined) {
+      const parsedPage = parseInt(rawPage, 10);
+      if (Number.isNaN(parsedPage) || parsedPage <= 0) {
+        res.status(400).json({ error: 'Invalid page parameter' });
+        return;
+      }
+      page = parsedPage;
+    }
+    
+    if (rawLimit !== undefined) {
+      const parsedLimit = parseInt(rawLimit, 10);
+      if (Number.isNaN(parsedLimit) || parsedLimit <= 0) {
+        res.status(400).json({ error: 'Invalid limit parameter' });
+        return;
+      }
+      limit = Math.min(parsedLimit, MAX_LIMIT);
+    }
+    
     const skip = (page - 1) * limit;
 
     // Verify user is a member of the group
@@ -172,12 +208,15 @@ export async function getExpenses(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // Get expenses (exclude soft-deleted)
+    // Get expenses (exclude soft-deleted expenses and groups)
     const [expenses, total] = await Promise.all([
       prisma.expense.findMany({
         where: {
           groupId,
           deletedAt: null,
+          group: {
+            deletedAt: null,
+          },
         },
         orderBy: {
           date: 'desc',
@@ -212,6 +251,9 @@ export async function getExpenses(req: Request, res: Response): Promise<void> {
         where: {
           groupId,
           deletedAt: null,
+          group: {
+            deletedAt: null,
+          },
         },
       }),
     ]);
@@ -250,6 +292,7 @@ export async function getExpense(req: Request, res: Response): Promise<void> {
         id: expenseId,
         deletedAt: null,
         group: {
+          deletedAt: null,
           members: {
             some: {
               userId: req.user.userId,
@@ -321,6 +364,7 @@ export async function updateExpense(req: Request, res: Response): Promise<void> 
         id: expenseId,
         deletedAt: null,
         group: {
+          deletedAt: null,
           members: {
             some: {
               userId: req.user.userId,
@@ -348,7 +392,7 @@ export async function updateExpense(req: Request, res: Response): Promise<void> 
 
     // If splits are being updated, validate them
     if (splits) {
-      const groupMemberIds = existingExpense.group.members.map((m) => m.userId);
+      const groupMemberIds = existingExpense.group.members.map((m: { userId: string }) => m.userId);
       const splitUserIds = splits.map((split: { userId: string }) => split.userId);
       const invalidUserIds = splitUserIds.filter((userId: string) => !groupMemberIds.includes(userId));
 
@@ -356,6 +400,15 @@ export async function updateExpense(req: Request, res: Response): Promise<void> 
         res.status(400).json({
           error: 'Invalid split: all users must be active group members',
           invalidUserIds,
+        });
+        return;
+      }
+
+      // Check for duplicate userIds in splits
+      const uniqueUserIds = new Set(splitUserIds);
+      if (uniqueUserIds.size !== splitUserIds.length) {
+        res.status(400).json({
+          error: 'Invalid split: duplicate user IDs are not allowed',
         });
         return;
       }
@@ -380,9 +433,25 @@ export async function updateExpense(req: Request, res: Response): Promise<void> 
       }
     }
 
+    // If amount is being changed without splits, reject the request
+    if (amount !== undefined && amount !== existingExpense.amount && !splits) {
+      res.status(400).json({
+        error: 'Cannot change amount without providing new splits that sum to the new amount',
+      });
+      return;
+    }
+
+    // Validate currency matches group currency if provided
+    if (currency !== undefined && currency !== existingExpense.group.currency) {
+      res.status(400).json({
+        error: `Currency must match group currency (${existingExpense.group.currency})`,
+      });
+      return;
+    }
+
     // Verify paidById is a group member if provided
     if (paidById) {
-      const groupMemberIds = existingExpense.group.members.map((m) => m.userId);
+      const groupMemberIds = existingExpense.group.members.map((m: { userId: string }) => m.userId);
       if (!groupMemberIds.includes(paidById)) {
         res.status(400).json({ error: 'Payer must be a group member' });
         return;
@@ -390,7 +459,7 @@ export async function updateExpense(req: Request, res: Response): Promise<void> 
     }
 
     // Update expense with atomic split replacement
-    const updatedExpense = await prisma.$transaction(async (tx) => {
+    const updatedExpense = await prisma.$transaction(async (tx: typeof prisma) => {
       // If splits are being updated, delete old splits first
       if (splits) {
         await tx.expenseSplit.deleteMany({
@@ -415,7 +484,7 @@ export async function updateExpense(req: Request, res: Response): Promise<void> 
               create: splits.map((split: { userId: string; paidShare: number; owedShare: number; percentage?: number }) => ({
                 userId: split.userId,
                 amount: split.owedShare,
-                percentage: split.percentage || null,
+                percentage: split.percentage ?? null,
               })),
             },
           }),
@@ -481,6 +550,7 @@ export async function deleteExpense(req: Request, res: Response): Promise<void> 
         id: expenseId,
         deletedAt: null,
         group: {
+          deletedAt: null,
           members: {
             some: {
               userId: req.user.userId,

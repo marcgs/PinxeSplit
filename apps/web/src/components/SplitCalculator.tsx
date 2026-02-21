@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSplitCalculator, type SplitType, type Split } from '../hooks/useSplitCalculator';
 import { fromCents } from '@pinxesplit/shared';
 import { EqualSplit } from './EqualSplit';
@@ -30,14 +30,33 @@ export function SplitCalculator({
   const handleTabChange = (type: SplitType) => {
     setActiveTab(type);
     calculator.setSplitType(type);
-    // Recalculate splits when tab changes
-    const splits = calculator.calculateSplits();
-    onSplitsChange(splits);
   };
 
+  // Calculate splits whenever state changes
+  const calculatedSplits = useMemo(() => {
+    try {
+      return calculator.calculateSplits();
+    } catch (error) {
+      return [];
+    }
+  }, [calculator.state]);
+
+  // Check validity without side effects
+  const isValidSplit = useMemo(() => {
+    try {
+      return calculator.isValid();
+    } catch (error) {
+      return false;
+    }
+  }, [calculator.state]);
+
+  // Propagate splits changes
+  useEffect(() => {
+    onSplitsChange(calculatedSplits);
+  }, [calculatedSplits, onSplitsChange]);
+
   const handleSplitUpdate = () => {
-    const splits = calculator.calculateSplits();
-    onSplitsChange(splits);
+    // Trigger recalculation via state changes in calculator
   };
 
   const tabs: Array<{ id: SplitType; label: string }> = [
@@ -124,6 +143,7 @@ export function SplitCalculator({
             totalAmount={amount}
             currency={currency}
             scale={scale}
+            payerId={calculator.state.payerId}
             onToggleParticipant={calculator.toggleParticipant}
             onUpdatePercentage={calculator.updateParticipantPercentage}
             onUpdate={handleSplitUpdate}
@@ -171,11 +191,11 @@ export function SplitCalculator({
       )}
 
       {/* Preview */}
-      {calculator.isValid() && (
+      {isValidSplit && (
         <div className="bg-gray-50 rounded-lg p-4">
           <h4 className="text-sm font-medium text-gray-900 mb-2">Split Preview</h4>
           <div className="space-y-2">
-            {calculator.calculateSplits().map((split) => {
+            {calculatedSplits.map((split) => {
               const participant = calculator.state.participants.find(
                 (p) => p.userId === split.userId
               );
@@ -183,7 +203,7 @@ export function SplitCalculator({
                 <div key={split.userId} className="flex justify-between text-sm">
                   <span className="text-gray-600">{participant?.name}</span>
                   <span className="font-medium">
-                    {currency} {fromCents(split.owedShare, scale).toFixed(2)}
+                    {currency} {fromCents(split.owedShare, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
                   </span>
                 </div>
               );
