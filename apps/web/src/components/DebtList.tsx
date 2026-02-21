@@ -1,6 +1,5 @@
 import { ArrowRight } from 'lucide-react';
-import { fromCents } from '@pinxesplit/shared';
-import { getCurrencyScale } from '../utils/currency';
+import { formatCurrencyAmount } from '../utils/currency';
 import type { Debt, UserBalance } from '../hooks/useBalances';
 
 interface DebtListProps {
@@ -13,13 +12,6 @@ interface DebtListProps {
 function getUserName(userId: string, members: UserBalance[]): string {
   const member = members.find((m) => m.userId === userId);
   return member?.user.name ?? userId;
-}
-
-function formatAmount(amount: number, currency: string): string {
-  const scale = getCurrencyScale(currency);
-  const abs = fromCents(amount, scale);
-  const decimals = scale === 1 ? 0 : scale === 1000 ? 3 : 2;
-  return `${currency} ${abs.toFixed(decimals)}`;
 }
 
 export function DebtList({ debts, members, onSettle, currentUserId }: DebtListProps) {
@@ -51,7 +43,7 @@ export function DebtList({ debts, members, onSettle, currentUserId }: DebtListPr
             </div>
             <div className="flex items-center gap-2 shrink-0 ml-2">
               <span className="text-sm font-semibold">
-                {formatAmount(debt.amount, debt.currency)}
+                {formatCurrencyAmount(debt.amount, debt.currency)}
               </span>
               {onSettle && isCurrentUserDebtor && (
                 <button

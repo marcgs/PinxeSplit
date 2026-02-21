@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGroupBalances, type Debt } from '../hooks/useBalances';
+import { useGroupBalances, type Debt, type UserBalance } from '../hooks/useBalances';
 import { useAuthStore } from '../stores/auth.store';
 import { BalanceCard } from '../components/BalanceCard';
 import { DebtList } from '../components/DebtList';
@@ -27,7 +27,7 @@ export function GroupBalancePage({ groupId }: GroupBalancePageProps) {
   const displayedDebts = showSimplified ? simplifiedDebts : debts;
 
   // Group balances by userId for BalanceCard display
-  const balancesByUser = new Map<string, typeof balances>();
+  const balancesByUser = new Map<string, UserBalance[]>();
   for (const b of balances) {
     const list = balancesByUser.get(b.userId) ?? [];
     list.push(b);

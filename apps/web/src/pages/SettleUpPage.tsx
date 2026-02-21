@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { fromCents } from '@pinxesplit/shared';
 import { PageContainer } from '@/components/PageContainer';
-import { useGroupBalances } from '@/hooks/useBalances';
-import { useSettleUp } from '@/hooks/useBalances';
+import { useGroupBalances, useSettleUp } from '@/hooks/useBalances';
 import { getCurrencyScale } from '@/utils/currency';
 
 interface LocationState {
@@ -26,7 +24,8 @@ export function SettleUpPage() {
   const [amountStr, setAmountStr] = useState(() => {
     if (state.amount && state.currencyCode) {
       const scale = getCurrencyScale(state.currencyCode);
-      return fromCents(state.amount, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2);
+      const decimals = scale === 1 ? 0 : scale === 1000 ? 3 : 2;
+      return (state.amount / scale).toFixed(decimals);
     }
     return '';
   });

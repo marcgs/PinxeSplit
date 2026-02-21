@@ -131,24 +131,42 @@ export async function getGroupBalances(groupId: string): Promise<GroupBalancesRe
 }
 
 /**
- * Build raw debt list: each debtor owes each creditor proportionally.
- * For simplicity, each debtor is shown as owing the full simplified amount
- * without merging — we just use the same simplification but label them "raw".
+ * Build raw (unoptimized) pairwise debts from net balances.
  *
- * In practice the "raw" debts represent each pairwise debt individually
- * (e.g. if A owes B and B owes C, both debts are shown separately).
- *
- * We compute raw debts as: for each debtor, they owe money to creditors
- * proportionally by creditor share.
+ * Each debtor owes each creditor proportionally to their credit share.
+ * This produces N_debtors × N_creditors debts, which is larger than the
+ * simplified (greedy) result of at most N-1 debts for N non-zero users.
  */
-function buildRawDebts(balances: NetBalance[]): Debt[] {
-  // For "original" (non-simplified) debts, we show the same greedy result
-  // but with a note: the distinction between simplified and original only
-  // matters in practice for larger groups where simplification reduces transfers.
-  // Here we use simplification for both but the UI can toggle to show them.
-  // Actually per spec: raw debts = unmerged pairwise debts, simplified = greedy reduction.
-  // We produce original debts by showing each debtor owing each creditor independently.
-  return simplifyMultiCurrency(balances);
+function buildRawDebts(allBalances: NetBalance[]): Debt[] {
+  const currencies = [...new Set(allBalances.map((b) => b.currency))];
+  const result: Debt[] = [];
+
+  for (const currency of currencies) {
+    const balances = allBalances.filter((b) => b.currency === currency && b.amount !== 0);
+    const creditors = balances.filter((b) => b.amount > 0);
+    const debtors = balances.filter((b) => b.amount < 0);
+
+    const totalCredit = creditors.reduce((sum, c) => sum + c.amount, 0);
+    if (totalCredit === 0) continue;
+
+    for (const debtor of debtors) {
+      const owes = Math.abs(debtor.amount);
+      for (const creditor of creditors) {
+        // Proportional share: debtor pays creditor based on creditor's share of total credit
+        const transfer = Math.round((owes * creditor.amount) / totalCredit);
+        if (transfer > 0) {
+          result.push({
+            from: debtor.userId,
+            to: creditor.userId,
+            amount: transfer,
+            currency,
+          });
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 /**

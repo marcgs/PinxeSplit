@@ -2,15 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/PageContainer';
 import { useOverallBalances } from '@/hooks/useBalances';
 import { useGroups } from '@/hooks/useGroups';
-import { fromCents } from '@pinxesplit/shared';
-import { getCurrencyScale } from '@/utils/currency';
-
-function formatBalance(amount: number, currency: string): string {
-  const scale = getCurrencyScale(currency);
-  const abs = fromCents(Math.abs(amount), scale);
-  const decimals = scale === 1 ? 0 : scale === 1000 ? 3 : 2;
-  return `${currency} ${abs.toFixed(decimals)}`;
-}
+import { formatCurrencyAmount } from '@/utils/currency';
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -44,7 +36,7 @@ export function HomePage() {
                     <p className="text-xs text-muted-foreground mb-1">You are owed</p>
                     {owedToMe.map((b) => (
                       <p key={b.currency} className="text-sm font-medium text-green-600">
-                        +{formatBalance(b.amount, b.currency)}
+                        +{formatCurrencyAmount(b.amount, b.currency)}
                       </p>
                     ))}
                   </div>
@@ -54,7 +46,7 @@ export function HomePage() {
                     <p className="text-xs text-muted-foreground mb-1">You owe</p>
                     {iOwe.map((b) => (
                       <p key={b.currency} className="text-sm font-medium text-red-600">
-                        {formatBalance(b.amount, b.currency)}
+                        {formatCurrencyAmount(b.amount, b.currency)}
                       </p>
                     ))}
                   </div>

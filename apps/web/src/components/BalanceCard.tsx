@@ -1,5 +1,4 @@
-import { fromCents } from '@pinxesplit/shared';
-import { getCurrencyScale } from '../utils/currency';
+import { formatCurrencyAmount } from '../utils/currency';
 
 interface BalanceEntry {
   currency: string;
@@ -12,13 +11,6 @@ interface BalanceCardProps {
   avatar?: string | null;
   balances: BalanceEntry[];
   onClick?: () => void;
-}
-
-function formatAmount(amount: number, currency: string): string {
-  const scale = getCurrencyScale(currency);
-  const abs = fromCents(Math.abs(amount), scale);
-  const decimals = scale === 1 ? 0 : scale === 1000 ? 3 : 2;
-  return `${currency} ${abs.toFixed(decimals)}`;
 }
 
 export function BalanceCard({ name, email, balances, onClick }: BalanceCardProps) {
@@ -44,7 +36,7 @@ export function BalanceCard({ name, email, balances, onClick }: BalanceCardProps
                 className={`text-sm font-medium ${b.amount > 0 ? 'text-green-600' : 'text-red-600'}`}
               >
                 {b.amount > 0 ? '+' : ''}
-                {formatAmount(b.amount, b.currency)}
+                {formatCurrencyAmount(b.amount, b.currency)}
               </p>
             ))
           )}
