@@ -118,6 +118,7 @@ model Expense {
   currency    String
   paidById    String
   categoryId  String?
+  isPayment   Boolean   @default(false) // True for settle-up payments
   date        DateTime  @default(now())
   deletedAt   DateTime? // For soft deletes
   createdAt   DateTime  @default(now())

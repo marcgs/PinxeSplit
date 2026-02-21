@@ -5,6 +5,7 @@ import { PageContainer } from '@/components/PageContainer';
 import { MemberList } from '@/components/MemberList';
 import { AddMemberDialog } from '@/components/AddMemberDialog';
 import { ExpenseListView } from '@/components/ExpenseListView';
+import { GroupBalancePage } from '@/pages/GroupBalancePage';
 import { useGroup, useDeleteGroup, useAddMember, useRemoveMember } from '@/hooks/useGroups';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -197,11 +198,7 @@ export function GroupDetailPage() {
           )}
 
           {activeTab === 'balances' && (
-            <div className="rounded-lg border bg-card p-12 text-center">
-              <p className="text-muted-foreground">
-                No balances to display. Balances feature coming soon!
-              </p>
-            </div>
+            <GroupBalancePage groupId={id || ''} />
           )}
 
           {activeTab === 'activity' && (
