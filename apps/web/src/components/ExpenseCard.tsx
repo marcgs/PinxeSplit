@@ -52,7 +52,7 @@ export function ExpenseCard({ expense, onClick }: ExpenseCardProps) {
         {/* Amount */}
         <div className="ml-4 text-right">
           <p className="text-xl font-bold text-gray-900">
-            {expense.currency} {fromCents(expense.amount, scale).toFixed(2)}
+            {expense.currency} {fromCents(expense.amount, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
           </p>
           <p className="text-xs text-gray-500 mt-1">
             {expense.splits.length} {expense.splits.length === 1 ? 'person' : 'people'}

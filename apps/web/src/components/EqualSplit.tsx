@@ -77,7 +77,7 @@ export function EqualSplit({
               {participant.included && (
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-900">
-                    {currency} {fromCents(share, scale).toFixed(2)}
+                    {currency} {fromCents(share, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
                   </p>
                 </div>
               )}
@@ -95,13 +95,13 @@ export function EqualSplit({
               {fromCents(
                 Math.floor(totalAmount / includedParticipants.length),
                 scale
-              ).toFixed(2)}
+              ).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
             </span>
           </div>
           {totalAmount % includedParticipants.length !== 0 && (
             <p className="text-xs text-gray-500 mt-1">
               Remainder of {currency}{' '}
-              {fromCents(totalAmount % includedParticipants.length, scale).toFixed(2)} added
+              {fromCents(totalAmount % includedParticipants.length, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)} added
               to payer
             </p>
           )}

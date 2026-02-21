@@ -97,7 +97,7 @@ export async function createExpense(req: Request, res: Response): Promise<void> 
     }
 
     // Create expense with splits in transaction
-    const expense = await prisma.$transaction(async (tx: typeof prisma) => {
+    const expense = await prisma.$transaction(async (tx) => {
       const newExpense = await tx.expense.create({
         data: {
           groupId,
@@ -459,7 +459,7 @@ export async function updateExpense(req: Request, res: Response): Promise<void> 
     }
 
     // Update expense with atomic split replacement
-    const updatedExpense = await prisma.$transaction(async (tx: typeof prisma) => {
+    const updatedExpense = await prisma.$transaction(async (tx) => {
       // If splits are being updated, delete old splits first
       if (splits) {
         await tx.expenseSplit.deleteMany({

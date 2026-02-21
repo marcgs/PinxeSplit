@@ -112,7 +112,7 @@ export function ExpenseDetailPage() {
 
             {/* Amount */}
             <p className="text-4xl font-bold text-blue-600 mb-4">
-              {expense.currency} {fromCents(expense.amount, scale).toFixed(2)}
+              {expense.currency} {fromCents(expense.amount, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
             </p>
 
             {/* Date */}
@@ -182,7 +182,7 @@ export function ExpenseDetailPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-gray-900">
-                      {expense.currency} {fromCents(split.amount, scale).toFixed(2)}
+                      {expense.currency} {fromCents(split.amount, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
                     </p>
                   </div>
                 </div>

@@ -112,6 +112,8 @@ export function ExpenseFormPage() {
     name: m.user.name,
   }));
 
+  const groupScale = getCurrencyScale(group.currency);
+
   return (
     <PageContainer>
       <div className="max-w-3xl mx-auto">
@@ -224,9 +226,9 @@ export function ExpenseFormPage() {
               <SplitCalculator
                 members={members}
                 defaultPayerId={currentUserId}
-                amount={toCents(parseFloat(amount), 100)}
+                amount={toCents(parseFloat(amount), groupScale)}
                 currency={group.currency}
-                scale={100}
+                scale={groupScale}
                 onSplitsChange={setSplits}
                 initialSplits={expense?.splits.map((split) => ({
                   userId: split.userId,

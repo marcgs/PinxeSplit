@@ -79,7 +79,7 @@ export function PercentageSplit({
                   <p className="text-sm font-medium text-gray-900">{participant.name}</p>
                   {participant.included && computedAmount > 0 && (
                     <p className="text-xs text-gray-500">
-                      {currency} {fromCents(computedAmount, scale).toFixed(2)}
+                      {currency} {fromCents(computedAmount, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
                     </p>
                   )}
                 </div>

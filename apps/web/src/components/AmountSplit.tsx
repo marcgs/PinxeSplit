@@ -61,8 +61,8 @@ export function AmountSplit({
                 <input
                   type="number"
                   min="0"
-                  step="0.01"
-                  value={fromCents(participant.amount || 0, scale).toFixed(2)}
+                  step={scale === 1 ? '1' : scale === 1000 ? '0.001' : '0.01'}
+                  value={fromCents(participant.amount || 0, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
                   onChange={(e) => handleAmountChange(participant.userId, e.target.value)}
                   className="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 />
@@ -86,13 +86,13 @@ export function AmountSplit({
                 delta === 0 ? 'text-green-700' : 'text-yellow-700'
               }`}
             >
-              {currency} {fromCents(currentTotal, scale).toFixed(2)}
+              {currency} {fromCents(currentTotal, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Expense amount</span>
             <span className="font-medium text-gray-900">
-              {currency} {fromCents(totalAmount, scale).toFixed(2)}
+              {currency} {fromCents(totalAmount, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
             </span>
           </div>
           <div className="flex justify-between border-t pt-2">
@@ -107,7 +107,7 @@ export function AmountSplit({
               }`}
             >
               {delta > 0 ? '+' : ''}
-              {currency} {fromCents(delta, scale).toFixed(2)}
+              {currency} {fromCents(delta, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
             </span>
           </div>
         </div>
@@ -134,7 +134,7 @@ export function AmountSplit({
                 {delta > 0
                   ? 'Amounts exceed total. Reduce by '
                   : 'Amounts are less than total. Add '}
-                {currency} {Math.abs(fromCents(delta, scale)).toFixed(2)}
+                {currency} {Math.abs(fromCents(delta, scale)).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
               </p>
             </div>
           </div>

@@ -94,7 +94,7 @@ export function SharesSplit({
                   </div>
                   {participant.included && computedAmount > 0 && (
                     <p className="text-xs text-gray-500">
-                      {currency} {fromCents(computedAmount, scale).toFixed(2)} (
+                      {currency} {fromCents(computedAmount, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)} (
                       {shareRatio.toFixed(1)}%)
                     </p>
                   )}
@@ -131,13 +131,13 @@ export function SharesSplit({
           <div className="flex justify-between text-sm mt-1">
             <span className="text-gray-600">Per share</span>
             <span className="font-medium text-gray-900">
-              {currency} {fromCents(Math.floor(totalAmount / totalShares), scale).toFixed(2)}
+              {currency} {fromCents(Math.floor(totalAmount / totalShares), scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)}
             </span>
           </div>
           {totalAmount % totalShares !== 0 && (
             <p className="text-xs text-gray-500 mt-1">
               Remainder of {currency}{' '}
-              {fromCents(totalAmount % totalShares, scale).toFixed(2)} added to payer
+              {fromCents(totalAmount % totalShares, scale).toFixed(scale === 1 ? 0 : scale === 1000 ? 3 : 2)} added to payer
             </p>
           )}
         </div>
