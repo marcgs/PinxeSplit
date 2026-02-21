@@ -7,6 +7,7 @@ import userRoutes from './routes/user.routes.js';
 import groupRoutes from './routes/group.routes.js';
 import currencyRoutes from './routes/currency.routes.js';
 import expenseRoutes from './routes/expense.routes.js';
+import balanceRoutes from './routes/balance.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -30,6 +31,7 @@ export function createApp(): Express {
   app.use('/api/v1/groups', groupRoutes);
   app.use('/api/v1/currencies', currencyRoutes);
   app.use('/api/v1', expenseRoutes);
+  app.use('/api/v1', balanceRoutes);
 
   // Error handler (must be last)
   app.use(errorHandler);
